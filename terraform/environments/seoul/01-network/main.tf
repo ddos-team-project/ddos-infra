@@ -37,3 +37,10 @@ output "vpc_id" {
 output "subnet_ids" {
   value = module.network.subnet_ids
 }
+
+# ❗ Aurora 배포용 DB 서브넷만 남기는 핵심 부분
+#   DB 계층이 remote_state로 읽어서 subnet group 구성에 사용됨
+output "private_db_subnets" {
+  description = "DB 전용 private subnet ID 목록"
+  value       = module.network.private_db_subnets
+}
