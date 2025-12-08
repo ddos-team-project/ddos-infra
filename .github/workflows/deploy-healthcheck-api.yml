@@ -14,7 +14,7 @@ on:
     paths:
       - 'applications/healthcheck-api/**'
   
-  # 수동 배포도 가능
+  # 수동 배포도 가능하도록 설정
   workflow_dispatch:
 
 env:
