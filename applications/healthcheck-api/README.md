@@ -84,11 +84,3 @@ docker run -d \
   -e DB_PASSWORD=<비밀번호> \
   healthcheck-api:dev
 ```
-
-## 배포
-
-GitHub Actions를 통해 자동 배포됩니다.
-- **트리거**: `main` 브랜치에 `apps/healthcheck-api/**` 변경 시
-- **대상**: Seoul EC2
-
-자세한 내용은 [배포 가이드](../../docs/guides/deploy-healthcheck-api.md) 참조
