@@ -24,7 +24,6 @@ env:
   APP_DIR: applications/healthcheck-api
 
 jobs:
-  # PR 단계: 빌드만 테스트
   build-test:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
@@ -39,7 +38,6 @@ jobs:
         docker build -t healthcheck-api:test .
         echo "✅ Build successful"
 
-  # Main merge: 실제 배포
   deploy:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
