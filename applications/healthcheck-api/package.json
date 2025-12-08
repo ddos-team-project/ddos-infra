@@ -1,0 +1,16 @@
+{
+  "name": "healthcheck-api",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "license": "ISC",
+  "description": "Aurora 연동 헬스체크 API",
+  "dependencies": {
+    "express": "^5.2.1",
+    "mysql2": "^3.15.3"
+  }
+}
