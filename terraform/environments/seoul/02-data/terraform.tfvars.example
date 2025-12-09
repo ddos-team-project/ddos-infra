@@ -1,0 +1,6 @@
+# Aurora Database Credentials
+# Copy this file to terraform.tfvars and fill in your actual values
+# terraform.tfvars is ignored by git for security
+
+master_username = "admin"
+master_password = "ChangeThisToSecurePassword!"
