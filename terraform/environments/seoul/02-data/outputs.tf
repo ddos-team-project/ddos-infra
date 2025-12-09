@@ -1,0 +1,45 @@
+output "global_cluster_id" {
+  description = "Global Aurora cluster identifier"
+  value       = aws_rds_global_cluster.this.id
+}
+
+output "global_cluster_arn" {
+  description = "Global Aurora cluster ARN"
+  value       = aws_rds_global_cluster.this.arn
+}
+
+output "cluster_id" {
+  description = "Aurora cluster identifier"
+  value       = module.aurora_primary.cluster_id
+}
+
+output "cluster_arn" {
+  description = "Aurora cluster ARN"
+  value       = module.aurora_primary.cluster_arn
+}
+
+output "cluster_endpoint" {
+  description = "Aurora cluster endpoint (writer)"
+  value       = module.aurora_primary.cluster_endpoint
+}
+
+output "cluster_reader_endpoint" {
+  description = "Aurora cluster reader endpoint"
+  value       = module.aurora_primary.cluster_reader_endpoint
+}
+
+output "cluster_port" {
+  description = "Aurora cluster port"
+  value       = module.aurora_primary.cluster_port
+}
+
+output "cluster_master_username" {
+  description = "Aurora cluster master username"
+  value       = module.aurora_primary.cluster_master_username
+  sensitive   = true
+}
+
+output "security_group_id" {
+  description = "Aurora security group ID"
+  value       = module.aurora_primary.security_group_id
+}
