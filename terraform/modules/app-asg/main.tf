@@ -38,6 +38,23 @@ data "aws_iam_policy_document" "ec2_policy" {
     ]
     resources = ["*"]
   }
+
+  # SSM Parameter Store에서 DB 비밀번호를 읽을 수 있도록 권한 추가
+  statement {
+    actions = [
+      "ssm:GetParameter",
+      "ssm:GetParameters"
+    ]
+    resources = ["*"]
+  }
+
+  # SSM Parameter가 KMS로 암호화되어 있으므로 복호화 권한 필요
+  statement {
+    actions = [
+      "kms:Decrypt"
+    ]
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_role" "ec2_role" {
@@ -117,7 +134,7 @@ resource "aws_launch_template" "this" {
     db_port            = var.db_port
     db_name            = var.db_name
     db_user            = var.db_user
-    db_password        = var.db_password
+    ssm_parameter_name = var.ssm_parameter_name
   }))
 
   network_interfaces {
