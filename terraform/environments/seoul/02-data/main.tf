@@ -20,6 +20,7 @@ module "aurora_primary" {
   engine         = aws_rds_global_cluster.this.engine
   engine_version = aws_rds_global_cluster.this.engine_version
 
+
   # Network 설정
   vpc_id                 = data.terraform_remote_state.network.outputs.vpc_id
   create_db_subnet_group = true
