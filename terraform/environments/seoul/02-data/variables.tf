@@ -111,3 +111,9 @@ variable "database_name" {
   type        = string
   default     = "ddos_noncore"
 }
+
+variable "kms_key_deletion_window" {
+  description = "KMS key deletion window in days"
+  type        = number
+  default     = 7
+}

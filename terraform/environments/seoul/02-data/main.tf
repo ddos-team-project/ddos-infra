@@ -28,6 +28,10 @@ module "aurora_primary" {
   # Global Cluster 연결
   global_cluster_identifier = aws_rds_global_cluster.this.id
 
+  # 암호화 설정 (Seoul KMS Key)
+  storage_encrypted = true
+  kms_key_id        = aws_kms_key.seoul_db_key.arn
+
   # 마스터 계정 설정
   master_username             = var.master_username
   master_password             = var.master_password
