@@ -1,10 +1,10 @@
 resource "aws_security_group" "alb_seoul" {
-  name        = "dh-prod-seoul-sg-alb-t1"
+  name        = "dh-prod-t1-seoul-sg-alb"
   description = "ALB security group (Seoul Tier1 non-core services)"
   vpc_id      = module.vpc.vpc_id
 
   tags = {
-    Name      = "dh-prod-seoul-sg-alb-t1"
+    Name      = "dh-prod-t1-seoul-sg-alb"
     Project   = "dh"
     Env       = "prod"
     Region    = "apne2"

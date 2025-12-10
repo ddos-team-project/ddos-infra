@@ -1,5 +1,5 @@
 resource "aws_security_group" "aurora_seoul_t1" {
-  name        = "dh-prod-seoul-sg-db-t1"
+  name        = "dh-prod-t1-seoul-sg-db"
   description = "Aurora DB security group (Seoul Tier1)"
   vpc_id      = module.vpc.vpc_id
 
@@ -27,7 +27,7 @@ resource "aws_security_group" "aurora_seoul_t1" {
   }
 
   tags = {
-    Name      = "dh-prod-seoul-sg-db"
+    Name      = "ddh-prod-t1-seoul-sg-db"
     Project   = "dh"
     Env       = "prod"
     Region    = "apne2"
