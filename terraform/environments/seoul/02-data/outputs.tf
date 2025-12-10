@@ -43,3 +43,18 @@ output "security_group_id" {
   description = "Aurora security group ID"
   value       = module.aurora_primary.security_group_id
 }
+
+output "kms_key_id" {
+  description = "KMS key ID for Aurora encryption"
+  value       = aws_kms_key.seoul_db_key.id
+}
+
+output "kms_key_arn" {
+  description = "KMS key ARN for Aurora encryption"
+  value       = aws_kms_key.seoul_db_key.arn
+}
+
+output "ssm_parameter_name" {
+  description = "SSM parameter name for master password"
+  value       = aws_ssm_parameter.aurora_master_password.name
+}

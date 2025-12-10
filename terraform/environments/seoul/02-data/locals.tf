@@ -7,11 +7,13 @@ locals {
     Project   = var.project
     Env       = var.environment
     Tier      = var.tier
-    Region    = var.region_code  # 태그는 apne2
+    Region    = var.region_code # 태그는 apne2
     ManagedBy = "terraform"
     Owner     = var.owner
   }
 
   cluster_name        = var.cluster_name
   global_cluster_name = var.global_cluster_id
+  kms_key_name        = "${local.name_prefix}-kms"
+  ssm_parameter_path  = "/ddos/aurora/password"
 }
