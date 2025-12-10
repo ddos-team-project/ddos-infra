@@ -1,5 +1,5 @@
 resource "aws_security_group" "app_seoul_t1" {
-  name        = "dh-prod-seoul-sg-app-t1"
+  name        = "dh-prod-t1-seoul-sg-app"
   description = "App EC2 security group (Seoul Tier1)"
   vpc_id      = module.vpc.vpc_id
 
@@ -27,7 +27,7 @@ resource "aws_security_group" "app_seoul_t1" {
   }
 
   tags = {
-    Name      = "dh-prod-seoul-sg-app-t1"
+    Name      = "dh-prod-t1-seoul-sg-app"
     Project   = "dh"
     Env       = "prod"
     Region    = "apne2"
