@@ -78,30 +78,74 @@ resource "aws_iam_instance_profile" "ec2_profile" {
   role = aws_iam_role.ec2_role.name
 }
 
-# App SG (optional create)
-resource "aws_security_group" "app" {
-  count       = var.app_security_group_id == null ? 1 : 0
-  name        = "${var.name}-app-sg"
-  description = "Security group for App EC2"
-  vpc_id      = var.vpc_id
+# ==== ALB (외부에서 App 계층 진입점) ====
+resource "aws_lb" "this" {
+  name               = "${var.name}-alb"
+  internal           = false # 인터넷 공개형
+  load_balancer_type = "application"
+  security_groups    = var.alb_sg_ids
+  subnets            = var.alb_subnet_ids # 반드시 public subnet
 
-  ingress {
-    from_port       = var.app_port
-    to_port         = var.app_port
-    protocol        = "tcp"
-    security_groups = [var.alb_security_group_id]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = merge(var.tags, { Name = "${var.name}-app-sg" })
+  tags = merge(var.tags, { Name = "${var.name}-alb" })
 }
 
+# ALB → EC2 트래픽 배분용 Target Group (HTTP 8080)
+resource "aws_lb_target_group" "this" {
+  name        = "${var.name}-tg"
+  port        = var.app_port
+  protocol    = "HTTP"
+  target_type = "instance"
+  vpc_id      = var.vpc_id
+
+  # EC2 컨테이너 내부 /health 체크 결과 기반 상태 판별
+  health_check {
+    path                = "/health"
+    protocol            = "HTTP"
+    port                = "traffic-port"
+    healthy_threshold   = 2
+    unhealthy_threshold = 3
+    timeout             = 5
+    interval            = 30
+    matcher             = "200"
+  }
+
+  tags = merge(var.tags, { Name = "${var.name}-tg" })
+}
+
+# HTTP Listener (80 포트 → Target Group 전달)
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = aws_lb.this.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.this.arn
+  }
+}
+
+
+# User-data 템플릿에 변수 주입
+data "template_file" "user_data" {
+  template = file("${path.module}/user-data.tpl")
+  vars = {
+    aws_region         = var.aws_region
+    image_uri_registry = split("/", var.image_uri)[0]
+    image_uri_full     = var.image_uri
+    app_port           = var.app_port
+    container_port     = var.container_port
+    service_name       = var.service_name
+    region_label       = var.region_label
+    app_env            = var.app_env
+    db_host            = var.db_host
+    db_port            = var.db_port
+    db_name            = var.db_name
+    db_user            = var.db_user
+    db_password        = var.db_password
+  }
+}
+
+# Launch Template (EC2 부팅 시 user_data 실행)
 resource "aws_launch_template" "this" {
   name_prefix   = "${var.name}-lt-v2-"
   image_id      = data.aws_ami.amazon_linux_2023.id
@@ -139,7 +183,7 @@ resource "aws_launch_template" "this" {
 
   network_interfaces {
     associate_public_ip_address = false
-    security_groups             = [var.app_security_group_id != null ? var.app_security_group_id : aws_security_group.app[0].id]
+    security_groups             = var.app_sg_ids
   }
 
   tag_specifications {

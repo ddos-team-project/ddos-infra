@@ -1,4 +1,4 @@
-resource "aws_security_group" "alb_seoul" {
+resource "aws_security_group" "alb_seoul_t1" {
   name        = "dh-prod-t1-seoul-sg-alb"
   description = "ALB security group (Seoul Tier1 non-core services)"
   vpc_id      = module.vpc.vpc_id

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #############################################################
 # 서울 리전 App 계층 (ALB + ASG 분리 모듈 사용)
 #############################################################
@@ -37,6 +38,8 @@ data "terraform_remote_state" "db" {
 
 data "aws_caller_identity" "current" {}
 
+=======
+>>>>>>> 506b52d (refactor: 서울 리전 app 리팩토링)
 locals {
   name_prefix = "healthcheck-api-seoul"
   vpc_id      = data.terraform_remote_state.network.outputs.vpc_id
@@ -44,11 +47,51 @@ locals {
   app_subnet_ids = data.terraform_remote_state.network.outputs.app_subnets
   alb_subnet_ids = data.terraform_remote_state.network.outputs.public_subnets
 
+<<<<<<< HEAD
   db_host = "dh-prod-db-seoul-aurora-v2.cluster-clg0eecwg923.ap-northeast-2.rds.amazonaws.com"
+=======
+  # TODO: SSM Parameter 에서 받아오기로 변경
+  db_host = "dh-prod-db-seoul-aurora-primary.cluster-clg0eecwg923.ap-northeast-2.rds.amazonaws.com"
+>>>>>>> 3a85f1d (refactor: 서울 리전 app 리팩토링)
 
   ecr_repository = "dh-prod-t1-ecr-healthcheck-api"
   image_tag      = "dev"
+<<<<<<< HEAD
   image_uri      = "${data.aws_caller_identity.current.account_id}.dkr.ecr.ap-northeast-2.amazonaws.com/${local.ecr_repository}:${local.image_tag}"
+=======
+  aws_account_id = data.aws_caller_identity.current.account_id
+
+  image_uri = "${local.aws_account_id}.dkr.ecr.ap-northeast-2.amazonaws.com/${local.ecr_repository}:${local.image_tag}"
+}
+
+module "healthcheck_api_app" {
+  source = "../../../modules/app-ec2-asg"
+
+  name           = local.name_prefix
+  vpc_id         = local.vpc_id
+  app_subnet_ids = local.app_subnet_ids
+  alb_subnet_ids = local.alb_subnet_ids
+
+  aws_region = var.aws_region
+  image_uri  = local.image_uri
+
+  instance_type    = "t3.medium"
+  min_size         = 2
+  max_size         = 6
+  desired_capacity = 2
+
+
+  service_name   = "ddos-healthcheck-api"
+  region_label   = "seoul"
+  app_env        = "prod"
+  app_port       = 8080
+  container_port = 3000
+
+  db_host     = local.db_host
+  db_name     = "ddos_noncore"
+  db_user     = "admin"
+  db_password = "SuperSecretPassword123!"
+>>>>>>> 506b52d (refactor: 서울 리전 app 리팩토링)
 
   tags = {
     Project = "ddos"
@@ -57,6 +100,17 @@ locals {
     System  = "healthcheck-api"
   }
 }
+<<<<<<< HEAD
+=======
+
+<<<<<<< HEAD
+# DB 비밀번호는 tfvars 또는 CI/CD 시크릿으로 주입 권장 (현재 기본값만 정의)
+variable "aurora_app_password" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+>>>>>>> 3a85f1d (refactor: 서울 리전 app 리팩토링)
 #라우터 53 연동 
 variable "route53_zone_name" {
   description = "Hosted zone name for Route53 (e.g. example.com). If null, Route53 record is not created."
@@ -134,3 +188,5 @@ output "healthcheck_alb_dns_name" {
 output "healthcheck_app_sg_id" {
   value = module.healthcheck_api_asg.app_sg_id
 }
+=======
+>>>>>>> 506b52d (refactor: 서울 리전 app 리팩토링)
