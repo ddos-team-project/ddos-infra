@@ -44,7 +44,7 @@ locals {
   app_subnet_ids = data.terraform_remote_state.network.outputs.app_subnets
   alb_subnet_ids = data.terraform_remote_state.network.outputs.public_subnets
 
-  db_host = "dh-prod-db-seoul-aurora-primary.cluster-clg0eecwg923.ap-northeast-2.rds.amazonaws.com"
+  db_host = "dh-prod-db-seoul-aurora-v2.cluster-clg0eecwg923.ap-northeast-2.rds.amazonaws.com"
 
   ecr_repository = "dh-prod-t1-ecr-healthcheck-api"
   image_tag      = "dev"
