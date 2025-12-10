@@ -31,8 +31,8 @@ variable "tags" {
   default     = {}
 }
 
-variable "alb_security_group_id" {
-  description = "Existing ALB security group ID (if null, module creates one)"
-  type        = string
-  default     = null
+variable "alb_sg_ids" {
+  description = "ALB에 부착할 보안그룹 ID 목록(없으면 빈 리스트)"
+  type        = list(string)
+  default     = []
 }

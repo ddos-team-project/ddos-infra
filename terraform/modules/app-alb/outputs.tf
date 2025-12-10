@@ -15,5 +15,5 @@ output "target_group_arn" {
 }
 
 output "alb_sg_id" {
-  value = var.alb_security_group_id != null ? var.alb_security_group_id : aws_security_group.alb[0].id
+  value = var.alb_sg_ids
 }

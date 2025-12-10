@@ -1,13 +1,3 @@
-data "aws_ami" "amazon_linux_2023" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["al2023-ami-*-x86_64"]
-  }
-}
-
 # IAM role/policy for EC2 (ECR pull + CloudWatch logs)
 data "aws_iam_policy_document" "ec2_assume" {
   statement {
@@ -78,54 +68,7 @@ resource "aws_iam_instance_profile" "ec2_profile" {
   role = aws_iam_role.ec2_role.name
 }
 
-# ==== ALB (외부에서 App 계층 진입점) ====
-resource "aws_lb" "this" {
-  name               = "${var.name}-alb"
-  internal           = false # 인터넷 공개형
-  load_balancer_type = "application"
-  security_groups    = var.alb_sg_ids
-  subnets            = var.alb_subnet_ids # 반드시 public subnet
-
-  tags = merge(var.tags, { Name = "${var.name}-alb" })
-}
-
-# ALB → EC2 트래픽 배분용 Target Group (HTTP 8080)
-resource "aws_lb_target_group" "this" {
-  name        = "${var.name}-tg"
-  port        = var.app_port
-  protocol    = "HTTP"
-  target_type = "instance"
-  vpc_id      = var.vpc_id
-
-  # EC2 컨테이너 내부 /health 체크 결과 기반 상태 판별
-  health_check {
-    path                = "/health"
-    protocol            = "HTTP"
-    port                = "traffic-port"
-    healthy_threshold   = 2
-    unhealthy_threshold = 3
-    timeout             = 5
-    interval            = 30
-    matcher             = "200"
-  }
-
-  tags = merge(var.tags, { Name = "${var.name}-tg" })
-}
-
-# HTTP Listener (80 포트 → Target Group 전달)
-resource "aws_lb_listener" "http" {
-  load_balancer_arn = aws_lb.this.arn
-  port              = "80"
-  protocol          = "HTTP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.this.arn
-  }
-}
-
-
-# User-data 템플릿에 변수 주입
+# 앱 컨테이너 실행을 위한 user-data
 data "template_file" "user_data" {
   template = file("${path.module}/user-data.tpl")
   vars = {
@@ -145,10 +88,9 @@ data "template_file" "user_data" {
   }
 }
 
-# Launch Template (EC2 부팅 시 user_data 실행)
 resource "aws_launch_template" "this" {
   name_prefix   = "${var.name}-lt-v2-"
-  image_id      = data.aws_ami.amazon_linux_2023.id
+  image_id      = coalesce(var.ami_id, data.aws_ami.amazon_linux_2023[0].id)
   instance_type = var.instance_type
   key_name      = var.key_name
 
@@ -210,6 +152,7 @@ resource "aws_autoscaling_group" "this" {
     version = "$Latest"
   }
 
+  # Target groups are provided by the ALB module.
   target_group_arns = var.target_group_arns
 
   tag {
@@ -229,5 +172,15 @@ resource "aws_autoscaling_group" "this" {
 
   lifecycle {
     create_before_destroy = true
+  }
+}
+data "aws_ami" "amazon_linux_2023" {
+  count      = var.ami_id == null ? 1 : 0
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["al2023-ami-*-x86_64"]
   }
 }
