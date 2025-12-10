@@ -1,7 +1,7 @@
 resource "aws_security_group" "aurora_seoul_t1" {
   name        = "dh-prod-t1-seoul-sg-db"
   description = "Aurora DB security group (Seoul Tier1)"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = data.terraform_remote_state.network.outputs.vpc_id
 
   ## 인바운드
   # MySQL 3306 from Seoul App SG

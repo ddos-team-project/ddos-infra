@@ -120,13 +120,8 @@ module "aurora_primary" {
   database_name = var.database_name
 
   # 보안 그룹 설정
-  create_security_group = true
-  security_group_rules = {
-    ingress_app = {
-      description = "Access from VPC"
-      cidr_blocks = var.allowed_cidr_blocks
-    }
-  }
+  create_security_group  = false
+  vpc_security_group_ids = [aws_security_group.aurora_seoul_t1.id]
 
   # 인스턴스 설정
   instance_class = var.instance_class
