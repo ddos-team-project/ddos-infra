@@ -41,9 +41,9 @@ output "cluster_master_username" {
   sensitive   = true
 }
 
-output "security_group_id" {
+output "db_sg_id" {
   description = "Aurora security group ID"
-  value       = module.aurora_primary.security_group_id
+  value       = aws_security_group.aurora_seoul_t1.id
 }
 
 output "kms_key_id" {

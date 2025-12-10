@@ -1,18 +1,18 @@
 resource "aws_security_group" "app_seoul_t1" {
   name        = "dh-prod-t1-seoul-sg-app"
   description = "App EC2 security group (Seoul Tier1)"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = local.vpc_id
 
   ## 인바운드
-  # HTTPS 443 from ALB SG만 허용
+  # App Port 8080 from ALB SG만 허용
   ingress {
-    description = "Allow HTTP from ALB only"
-    from_port   = 443
-    to_port     = 443
+    description = "Allow app traffic from ALB only"
+    from_port   = 8080
+    to_port     = 8080
     protocol    = "tcp"
 
     #서울 alb-t1에서 오는 요청만 처리
-    security_groups = [aws_security_group.alb_seoul.id]
+    security_groups = [aws_security_group.alb_seoul_t1.id]
   }
 
   ## 아웃바운드
