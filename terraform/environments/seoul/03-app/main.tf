@@ -71,6 +71,7 @@ module "healthcheck_api_alb" {
   name              = local.name_prefix
   vpc_id            = local.vpc_id
   alb_subnet_ids    = local.alb_subnet_ids
+  alb_sg_ids        = [aws_security_group.alb_seoul_t1.id]
   app_port          = 8080
   health_check_path = "/health"
   tags              = local.tags
@@ -82,6 +83,7 @@ module "healthcheck_api_asg" {
   name           = local.name_prefix
   vpc_id         = local.vpc_id
   app_subnet_ids = local.app_subnet_ids
+  app_sg_ids     = [aws_security_group.app_seoul_t1.id]
   app_port       = 8080
   container_port = 3000
 

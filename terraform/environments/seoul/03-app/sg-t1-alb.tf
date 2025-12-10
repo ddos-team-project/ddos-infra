@@ -1,7 +1,7 @@
 resource "aws_security_group" "alb_seoul_t1" {
   name        = "dh-prod-t1-seoul-sg-alb"
   description = "ALB security group (Seoul Tier1 non-core services)"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = local.vpc_id
 
   tags = {
     Name      = "dh-prod-t1-seoul-sg-alb"
@@ -25,7 +25,7 @@ resource "aws_security_group_rule" "alb_seoul_ingress_http" {
   cidr_blocks      = ["0.0.0.0/0"]
   ipv6_cidr_blocks = ["::/0"]
 
-  security_group_id = aws_security_group.alb_seoul.id
+  security_group_id = aws_security_group.alb_seoul_t1.id
 }
 
 # HTTPS (443) from anywhere
@@ -38,7 +38,7 @@ resource "aws_security_group_rule" "alb_seoul_ingress_https" {
   cidr_blocks      = ["0.0.0.0/0"]
   ipv6_cidr_blocks = ["::/0"]
 
-  security_group_id = aws_security_group.alb_seoul.id
+  security_group_id = aws_security_group.alb_seoul_t1.id
 }
 
 ## 아웃바운드 룰
@@ -52,5 +52,5 @@ resource "aws_security_group_rule" "alb_seoul_egress_all" {
   cidr_blocks      = ["0.0.0.0/0"]
   ipv6_cidr_blocks = ["::/0"]
 
-  security_group_id = aws_security_group.alb_seoul.id
+  security_group_id = aws_security_group.alb_seoul_t1.id
 }
