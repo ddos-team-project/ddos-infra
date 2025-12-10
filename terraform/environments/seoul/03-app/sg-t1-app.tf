@@ -1,6 +1,6 @@
 resource "aws_security_group" "app_seoul_t1" {
   name        = "dh-prod-t1-seoul-sg-app"
-  description = "App EC2 security group (Seoul Tier1)"
+  description = "App EC2 security group for Seoul Tier1"
   vpc_id      = local.vpc_id
 
   ## 인바운드

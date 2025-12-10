@@ -1,5 +1,5 @@
 variable "aws_region" {
-  description = "AWS Region"
+  description = "AWS 리전"
   type        = string
   default     = "ap-northeast-2"
 }
@@ -12,13 +12,13 @@ variable "aurora_app_password" {
 }
 
 variable "route53_zone_name" {
-  description = "Hosted zone name for Route53 (e.g. example.com). If null, Route53 record is not created."
+  description = "Route53 호스팅 존 이름 (예: example.com). null이면 Route53 레코드 생성 안함"
   type        = string
   default     = null
 }
 
 variable "route53_record_name" {
-  description = "Record name to point to the ALB (e.g. healthcheck.example.com). If null, Route53 record is not created."
+  description = "ALB를 가리킬 레코드 이름 (예: healthcheck.example.com). null이면 Route53 레코드 생성 안함"
   type        = string
   default     = null
 }

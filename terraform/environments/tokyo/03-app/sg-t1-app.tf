@@ -1,12 +1,12 @@
 resource "aws_security_group" "app_tokyo_t1" {
   name        = "dh-prod-t1-tokyo-sg-app"
-  description = "App EC2 security group (tokyo Tier1)"
+  description = "App EC2 security group for Tokyo Tier1"
   vpc_id      = module.vpc.vpc_id
 
   ## 인바운드
   # HTTPS 443 from ALB SG만 허용
   ingress {
-    description = "Allow HTTP from ALB only"
+    description = "Allow app traffic from ALB only"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"

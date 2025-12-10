@@ -1,12 +1,12 @@
 resource "aws_security_group" "aurora_tokyo_t1" {
   name        = "dh-prod-t1-tokyo-sg-db"
-  description = "Aurora DB security group (tokyo Tier1)"
+  description = "Aurora DB security group for Tokyo Tier1"
   vpc_id      = module.vpc.vpc_id
 
   ## 인바운드
   # MySQL 3306 from tokyo App SG 
   ingress {
-    description = "Allow MySQL from tokyo App Tier1"
+    description = "Allow MySQL from Tokyo App Tier1"
     from_port   = 3306
     to_port     = 3306
     protocol    = "tcp"

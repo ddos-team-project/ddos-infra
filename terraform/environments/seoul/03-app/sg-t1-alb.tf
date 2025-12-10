@@ -1,6 +1,6 @@
 resource "aws_security_group" "alb_seoul_t1" {
   name        = "dh-prod-t1-seoul-sg-alb"
-  description = "ALB security group (Seoul Tier1 non-core services)"
+  description = "ALB security group for Seoul Tier1 non-core services"
   vpc_id      = local.vpc_id
 
   tags = {
