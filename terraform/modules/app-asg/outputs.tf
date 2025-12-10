@@ -1,3 +1,4 @@
 output "app_sg_id" {
-  value = length(var.app_sg_ids) > 0 ? var.app_sg_ids[0] : null
+  description = "App 보안 그룹 ID (app_sg_ids의 첫 번째 항목)"
+  value       = length(var.app_sg_ids) > 0 ? var.app_sg_ids[0] : null
 }

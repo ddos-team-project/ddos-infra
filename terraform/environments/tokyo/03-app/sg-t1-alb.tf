@@ -1,6 +1,6 @@
 resource "aws_security_group" "alb_tokyo" {
   name        = "dh-prod-t1-tokyo-sg-alb"
-  description = "ALB security group (Tokyo Tier1 non-core services)"
+  description = "ALB security group for Tokyo Tier1 non-core services"
   vpc_id      = module.vpc.vpc_id
 
   tags = {

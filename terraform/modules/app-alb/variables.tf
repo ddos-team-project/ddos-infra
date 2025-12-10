@@ -1,5 +1,5 @@
 variable "name" {
-  description = "ALB name prefix"
+  description = "ALB 이름 접두사"
   type        = string
 }
 
@@ -9,24 +9,24 @@ variable "vpc_id" {
 }
 
 variable "alb_subnet_ids" {
-  description = "Subnets for ALB (typically public)"
+  description = "ALB용 서브넷 목록 (일반적으로 public)"
   type        = list(string)
 }
 
 variable "app_port" {
-  description = "Port exposed on target group"
+  description = "타겟 그룹에 노출할 포트"
   type        = number
   default     = 8080
 }
 
 variable "health_check_path" {
-  description = "Health check path for the target group"
+  description = "타겟 그룹 헬스체크 경로"
   type        = string
   default     = "/health"
 }
 
 variable "tags" {
-  description = "Common tags"
+  description = "공통 태그"
   type        = map(string)
   default     = {}
 }

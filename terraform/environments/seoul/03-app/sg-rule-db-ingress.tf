@@ -3,7 +3,7 @@
 
 resource "aws_security_group_rule" "db_from_app" {
   type                     = "ingress"
-  description              = "서울 App Tier1에서 MySQL 접근 허용"
+  description              = "Allow MySQL from Seoul App Tier1"
   from_port                = 3306
   to_port                  = 3306
   protocol                 = "tcp"
