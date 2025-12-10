@@ -1,9 +1,9 @@
 module "tier1_acm_certificate" {
   source = "../../../modules/acm-certificate"
 
-  domain_name      = var.route53_tier1_record
-  route53_zone_id  = data.aws_route53_zone.root[0].zone_id
-  tags             = local.tags
+  domain_name     = var.route53_tier1_record
+  route53_zone_id = data.aws_route53_zone.root[0].zone_id
+  tags            = local.tags
 }
 
 module "healthcheck_api_alb" {
