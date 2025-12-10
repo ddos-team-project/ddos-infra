@@ -132,3 +132,13 @@ variable "key_name" {
   type    = string
   default = null
 }
+
+variable "alb_sg_ids" {
+  description = "ABL에 붙일 SG id들"
+  type        = list(string)
+}
+
+variable "app_sg_ids" {
+  description = "ASG에 붙일 SG id들"
+  type        = list(string)
+}
