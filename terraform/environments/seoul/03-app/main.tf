@@ -22,10 +22,13 @@ module "healthcheck_api_alb" {
 module "healthcheck_api_asg" {
   source = "../../../modules/app-asg"
 
+
   name           = local.name_prefix
   vpc_id         = local.vpc_id
   app_subnet_ids = local.app_subnet_ids
-  app_sg_ids     = [aws_security_group.app_seoul_t1.id]
+
+  app_sg_ids = [aws_security_group.app_seoul_t1.id]
+
   app_port       = 8080
   container_port = 3000
 
