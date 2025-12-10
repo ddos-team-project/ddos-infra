@@ -33,6 +33,9 @@ module "aurora_primary" {
   master_password             = var.master_password
   manage_master_user_password = false
 
+  # 기본 데이터베이스 생성
+  database_name = var.database_name
+
   # 보안 그룹 설정
   create_security_group = true
   security_group_rules = {
