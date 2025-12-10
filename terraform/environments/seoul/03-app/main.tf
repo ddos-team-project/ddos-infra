@@ -5,12 +5,8 @@ locals {
   app_subnet_ids = data.terraform_remote_state.network.outputs.app_subnets
   alb_subnet_ids = data.terraform_remote_state.network.outputs.public_subnets
 
-<<<<<<< HEAD
-  db_host = "dh-prod-db-seoul-aurora-v2.cluster-clg0eecwg923.ap-northeast-2.rds.amazonaws.com"
-=======
   # TODO: SSM Parameter 에서 받아오기로 변경
   db_host = "dh-prod-db-seoul-aurora-primary.cluster-clg0eecwg923.ap-northeast-2.rds.amazonaws.com"
->>>>>>> 3a85f1d (refactor: 서울 리전 app 리팩토링)
 
   ecr_repository = "dh-prod-t1-ecr-healthcheck-api"
   image_tag      = "dev"
@@ -55,16 +51,7 @@ module "healthcheck_api_app" {
     System  = "healthcheck-api"
   }
 }
-<<<<<<< HEAD
-=======
 
-# DB 비밀번호는 tfvars 또는 CI/CD 시크릿으로 주입 권장 (현재 기본값만 정의)
-variable "aurora_app_password" {
-  type      = string
-  sensitive = true
-  default   = ""
-}
->>>>>>> 3a85f1d (refactor: 서울 리전 app 리팩토링)
 #라우터 53 연동 
 variable "route53_zone_name" {
   description = "Hosted zone name for Route53 (e.g. example.com). If null, Route53 record is not created."
@@ -110,35 +97,7 @@ module "healthcheck_api_asg" {
   db_user            = "admin"
   ssm_parameter_name = "/ddos/aurora/password"
 
-  alb_security_group_id = module.healthcheck_api_alb.alb_sg_id
-  target_group_arns     = [module.healthcheck_api_alb.target_group_arn]
+  target_group_arns = [module.healthcheck_api_alb.target_group_arn]
 
   tags = local.tags
-}
-#라우터
-data "aws_route53_zone" "root" {
-  count        = var.route53_zone_name != null ? 1 : 0
-  name         = var.route53_zone_name
-  private_zone = false
-}
-
-resource "aws_route53_record" "healthcheck" {
-  count   = var.route53_zone_name != null && var.route53_record_name != null ? 1 : 0
-  zone_id = data.aws_route53_zone.root[0].zone_id
-  name    = var.route53_record_name
-  type    = "A"
-
-  alias {
-    name                   = module.healthcheck_api_alb.alb_dns_name
-    zone_id                = module.healthcheck_api_alb.alb_zone_id
-    evaluate_target_health = true
-  }
-}
-
-output "healthcheck_alb_dns_name" {
-  value = module.healthcheck_api_alb.alb_dns_name
-}
-
-output "healthcheck_app_sg_id" {
-  value = module.healthcheck_api_asg.app_sg_id
 }

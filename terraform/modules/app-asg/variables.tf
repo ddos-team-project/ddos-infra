@@ -1,5 +1,5 @@
 variable "name" {
-  description = "App name prefix"
+  description = "앱 이름 프리픽스"
   type        = string
 }
 
@@ -9,136 +9,144 @@ variable "vpc_id" {
 }
 
 variable "app_subnet_ids" {
-  description = "Subnets for EC2 (typically private-app)"
+  description = "EC2가 배치될 서브넷 목록(보통 프라이빗 앱 서브넷)"
   type        = list(string)
 }
 
 variable "instance_type" {
-  description = "EC2 instance type"
+  description = "EC2 인스턴스 타입"
   type        = string
   default     = "t3.medium"
 }
 
 variable "min_size" {
-  description = "ASG min capacity"
+  description = "ASG 최소 용량"
   type        = number
   default     = 2
 }
 
 variable "max_size" {
-  description = "ASG max capacity"
+  description = "ASG 최대 용량"
   type        = number
   default     = 6
 }
 
 variable "desired_capacity" {
-  description = "ASG desired capacity"
+  description = "ASG 희망 용량"
   type        = number
   default     = 2
 }
 
 variable "image_uri" {
-  description = "Full ECR image URI"
+  description = "ECR 이미지 전체 URI"
   type        = string
 }
 
+variable "ami_id" {
+  description = "고정 AMI ID (null이면 Amazon Linux 2023을 조회)"
+  type        = string
+  default     = null
+}
+
 variable "aws_region" {
-  description = "AWS region for this app"
+  description = "앱이 동작할 AWS 리전"
   type        = string
 }
 
 variable "service_name" {
-  description = "Service name (SERVICE_NAME env)"
+  description = "서비스 이름 (SERVICE_NAME 환경변수)"
   type        = string
   default     = "ddos-healthcheck-api"
 }
 
 variable "app_env" {
-  description = "Application environment (prod/stage/dev)"
+  description = "애플리케이션 환경 (prod/stage/dev)"
   type        = string
   default     = "prod"
 }
 
 variable "region_label" {
-  description = "Logical region label for app"
+  description = "앱에서 사용할 리전 라벨"
   type        = string
   default     = "seoul"
 }
 
 variable "container_port" {
-  description = "Container internal port"
+  description = "컨테이너 내부 포트"
   type        = number
   default     = 3000
 }
 
 variable "app_port" {
-  description = "Port exposed on EC2 / Target Group"
+  description = "EC2/TG에서 노출할 포트"
   type        = number
   default     = 8080
 }
 
 variable "db_host" {
-  description = "Aurora endpoint"
+  description = "Aurora 엔드포인트"
   type        = string
 }
 
 variable "db_port" {
-  description = "Aurora port"
+  description = "Aurora 포트"
   type        = number
   default     = 3306
 }
 
 variable "db_name" {
-  description = "Aurora database name"
+  description = "Aurora DB 이름"
   type        = string
   default     = "ddos_noncore"
 }
 
 variable "db_user" {
-  description = "Aurora user"
+  description = "Aurora 사용자"
   type        = string
   default     = "app_admin"
 }
 
+<<<<<<< HEAD
 variable "ssm_parameter_name" {
   description = "SSM Parameter Store path for DB password (e.g. /ddos/aurora/password)"
+=======
+variable "db_password" {
+  description = "Aurora 비밀번호"
+>>>>>>> 43abaa0 (﻿refactor: ALB/TG 모듈 분리 및 서울 app 레이어 정리)
   type        = string
 }
 
 variable "tags" {
-  description = "Common tags"
+  description = "공통 태그"
   type        = map(string)
   default     = {}
 }
 
 variable "app_security_group_id" {
-  description = "Existing App security group ID (if null, module creates one)"
+  description = "기존 앱 SG ID (null이면 모듈이 생성)"
   type        = string
   default     = null
 }
 
 variable "alb_security_group_id" {
-  description = "ALB security group ID to allow ingress from (required if creating app SG)"
+  description = "앱 SG 생성 시 인입을 허용할 ALB SG ID"
   type        = string
   default     = null
 }
 
 variable "target_group_arns" {
-  description = "Target group ARNs to attach to the ASG"
+  description = "ASG에 연결할 타깃그룹 ARN 목록"
   type        = list(string)
 }
 
 variable "key_name" {
-  type    = string
-  default = null
-}
-
-variable "alb_sg_ids" {
-  description = "ABL에 붙일 SG id들"
-  type        = list(string)
+  description = "EC2 키 페어 이름"
+  type        = string
+  default     = null
 }
 
 variable "app_sg_ids" {
-  description = "ASG에 붙일 SG id들"
+  description = "ASG 인스턴스에 부착할 SG ID 목록(없으면 빈 리스트)"
   type        = list(string)
+  default     = []
 }
