@@ -1,5 +1,5 @@
 variable "name" {
-  description = "App name prefix (e.g. healthcheck-api-seoul)"
+  description = "App name prefix"
   type        = string
 }
 
@@ -10,11 +10,6 @@ variable "vpc_id" {
 
 variable "app_subnet_ids" {
   description = "Subnets for EC2 (typically private-app)"
-  type        = list(string)
-}
-
-variable "alb_subnet_ids" {
-  description = "Subnets for ALB (typically public)"
   type        = list(string)
 }
 
@@ -43,7 +38,7 @@ variable "desired_capacity" {
 }
 
 variable "image_uri" {
-  description = "Full ECR image URI (e.g. 123456789012.dkr.ecr.ap-northeast-2.amazonaws.com/dh-prod-t1-ecr-healthcheck-api:dev)"
+  description = "Full ECR image URI"
   type        = string
 }
 
@@ -65,13 +60,13 @@ variable "app_env" {
 }
 
 variable "region_label" {
-  description = "Logical region label for app (e.g. seoul, tokyo)"
+  description = "Logical region label for app"
   type        = string
   default     = "seoul"
 }
 
 variable "container_port" {
-  description = "Container internal port (Node app listens on)"
+  description = "Container internal port"
   type        = number
   default     = 3000
 }
@@ -116,6 +111,24 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "app_security_group_id" {
+  description = "Existing App security group ID (if null, module creates one)"
+  type        = string
+  default     = null
+}
+
+variable "alb_security_group_id" {
+  description = "ALB security group ID to allow ingress from (required if creating app SG)"
+  type        = string
+  default     = null
+}
+
+variable "target_group_arns" {
+  description = "Target group ARNs to attach to the ASG"
+  type        = list(string)
+}
+
 variable "key_name" {
   type    = string
   default = null
