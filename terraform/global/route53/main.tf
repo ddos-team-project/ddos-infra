@@ -23,13 +23,13 @@ data "aws_route53_zone" "main" {
 }
 
 ###############################
-# 2. 서울 ALB 정보 로드
+# 2. 서울 ALB Remote State
 ###############################
 data "terraform_remote_state" "seoul_app" {
   backend = "s3"
   config = {
     bucket         = "diehard-ddos-tf-state-lock"
-    key            = "environments/seoul/03-app/terraform.tfstate"
+    key            = "seoul/03-app/healthcheck-api.tfstate"
     region         = "ap-northeast-2"
     dynamodb_table = "terraform-lock-table"
     encrypt        = true
@@ -37,13 +37,14 @@ data "terraform_remote_state" "seoul_app" {
 }
 
 ###############################
-# 3. 도쿄 ALB 정보 로드
+# 3. 도쿄 ALB Remote State (옵션)
 ###############################
 data "terraform_remote_state" "tokyo_app" {
+  count = var.enable_tokyo ? 1 : 0
   backend = "s3"
   config = {
     bucket         = "diehard-ddos-tf-state-lock"
-    key            = "environments/tokyo/02-data/terraform.tfstate"
+    key            = "tokyo/03-app/healthcheck-api.tfstate"
     region         = "ap-northeast-1"
     dynamodb_table = "terraform-lock-table"
     encrypt        = true
@@ -51,10 +52,9 @@ data "terraform_remote_state" "tokyo_app" {
 }
 
 ################################################################################
-# 4. Tier1 Weighted (서울 80 / 도쿄 20)
+# Tier1 Weighted (서울 80 / 도쿄 20)
 ################################################################################
 
-# 서울 Weighted Record 80
 resource "aws_route53_record" "tier1_seoul" {
   zone_id        = data.aws_route53_zone.main.zone_id
   name           = var.api_tier1_record
@@ -62,8 +62,8 @@ resource "aws_route53_record" "tier1_seoul" {
   set_identifier = "seoul"
 
   alias {
-    name                   = data.terraform_remote_state.seoul_app.outputs.alb_tier1_dns_name
-    zone_id                = data.terraform_remote_state.seoul_app.outputs.alb_tier1_zone_id
+    name                   = data.terraform_remote_state.seoul_app.outputs.healthcheck_alb_dns_name
+    zone_id                = data.terraform_remote_state.seoul_app.outputs.healthcheck_alb_zone_id
     evaluate_target_health = true
   }
 
@@ -72,17 +72,16 @@ resource "aws_route53_record" "tier1_seoul" {
   }
 }
 
-
-# 도쿄 Weighted Record 20
 resource "aws_route53_record" "tier1_tokyo" {
+  count          = var.enable_tokyo ? 1 : 0
   zone_id        = data.aws_route53_zone.main.zone_id
   name           = var.api_tier1_record
   type           = "A"
   set_identifier = "tokyo"
 
   alias {
-    name                   = data.terraform_remote_state.tokyo_app.outputs.alb_tier1_dns_name
-    zone_id                = data.terraform_remote_state.tokyo_app.outputs.alb_tier1_zone_id
+    name                   = data.terraform_remote_state.tokyo_app[0].outputs.healthcheck_alb_dns_name
+    zone_id                = data.terraform_remote_state.tokyo_app[0].outputs.healthcheck_alb_zone_id
     evaluate_target_health = true
   }
 
@@ -91,13 +90,10 @@ resource "aws_route53_record" "tier1_tokyo" {
   }
 }
 
-
-
 ################################################################################
-# 5. Tier2 Failover (서울 PRIMARY / 도쿄 SECONDARY)
+# Tier2 Failover (서울 PRIMARY / 도쿄 SECONDARY)
 ################################################################################
 
-# 서울 PRIMARY
 resource "aws_route53_record" "tier2_primary" {
   zone_id        = data.aws_route53_zone.main.zone_id
   name           = var.api_tier2_record
@@ -105,8 +101,8 @@ resource "aws_route53_record" "tier2_primary" {
   set_identifier = "primary"
 
   alias {
-    name                   = data.terraform_remote_state.seoul_app.outputs.alb_tier2_dns_name
-    zone_id                = data.terraform_remote_state.seoul_app.outputs.alb_tier2_zone_id
+    name                   = data.terraform_remote_state.seoul_app.outputs.healthcheck_alb_dns_name
+    zone_id                = data.terraform_remote_state.seoul_app.outputs.healthcheck_alb_zone_id
     evaluate_target_health = true
   }
 
@@ -115,18 +111,16 @@ resource "aws_route53_record" "tier2_primary" {
   }
 }
 
-
-
-# 도쿄 SECONDARY
 resource "aws_route53_record" "tier2_secondary" {
+  count          = var.enable_tokyo ? 1 : 0
   zone_id        = data.aws_route53_zone.main.zone_id
   name           = var.api_tier2_record
   type           = "A"
   set_identifier = "secondary"
 
   alias {
-    name                   = data.terraform_remote_state.tokyo_app.outputs.alb_tier2_dns_name
-    zone_id                = data.terraform_remote_state.tokyo_app.outputs.alb_tier2_zone_id
+    name                   = data.terraform_remote_state.tokyo_app[0].outputs.healthcheck_alb_dns_name
+    zone_id                = data.terraform_remote_state.tokyo_app[0].outputs.healthcheck_alb_zone_id
     evaluate_target_health = true
   }
 
