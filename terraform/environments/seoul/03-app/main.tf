@@ -57,13 +57,6 @@ locals {
     System  = "healthcheck-api"
   }
 }
-
-# DB 비밀번호는 tfvars 또는 CI/CD 시크릿으로 주입 권장 (현재 기본값만 정의)
-variable "aurora_app_password" {
-  type      = string
-  sensitive = true
-  default   = ""
-}
 #라우터 53 연동 
 variable "route53_zone_name" {
   description = "Hosted zone name for Route53 (e.g. example.com). If null, Route53 record is not created."
@@ -104,10 +97,10 @@ module "healthcheck_api_asg" {
   region_label = "seoul"
   app_env      = "prod"
 
-  db_host     = local.db_host
-  db_name     = "ddos_noncore"
-  db_user     = "admin"
-  db_password = "SuperSecretPassword123!" # TODO: SSM/Secrets Manager로 대체
+  db_host            = local.db_host
+  db_name            = "ddos_noncore"
+  db_user            = "admin"
+  ssm_parameter_name = "/ddos/aurora/password"
 
   alb_security_group_id = module.healthcheck_api_alb.alb_sg_id
   target_group_arns     = [module.healthcheck_api_alb.target_group_arn]

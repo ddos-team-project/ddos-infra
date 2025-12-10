@@ -100,10 +100,9 @@ variable "db_user" {
   default     = "app_admin"
 }
 
-variable "db_password" {
-  description = "Aurora password"
+variable "ssm_parameter_name" {
+  description = "SSM Parameter Store path for DB password (e.g. /ddos/aurora/password)"
   type        = string
-  sensitive   = true
 }
 
 variable "tags" {

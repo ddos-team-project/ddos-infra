@@ -30,6 +30,14 @@ docker rm ${service_name} 2>/dev/null || true
 # 최신 이미지 pull
 docker pull ${image_uri_full}
 
+# 👇 [중요] SSM Parameter Store에서 DB 비밀번호 조회 (KMS 복호화 포함)
+DB_PASSWORD=$(aws ssm get-parameter \
+  --name "${ssm_parameter_name}" \
+  --with-decryption \
+  --query "Parameter.Value" \
+  --output text \
+  --region ${aws_region})
+
 # 컨테이너 실행
 docker run -d \
   --name ${service_name} \
@@ -42,5 +50,5 @@ docker run -d \
   -e DB_PORT="${db_port}" \
   -e DB_NAME="${db_name}" \
   -e DB_USER="${db_user}" \
-  -e DB_PASSWORD="${db_password}" \
+  -e DB_PASSWORD="$DB_PASSWORD" \
   ${image_uri_full}
