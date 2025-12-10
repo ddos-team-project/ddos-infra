@@ -1,45 +1,3 @@
-<<<<<<< HEAD
-#############################################################
-# 서울 리전 App 계층 (ALB + ASG 분리 모듈 사용)
-#############################################################
-
-terraform {
-  required_version = ">= 1.6.0"
-  backend "s3" {
-    bucket = "diehard-ddos-tf-state-lock"
-    key    = "seoul/03-app/healthcheck-api.tfstate"
-    region = "ap-northeast-2"
-  }
-}
-
-provider "aws" {
-  region = "ap-northeast-2"
-}
-
-# 01-network remote_state → VPC / Subnets
-data "terraform_remote_state" "network" {
-  backend = "s3"
-  config = {
-    bucket = "diehard-ddos-tf-state-lock"
-    key    = "seoul/01-network/terraform.tfstate"
-    region = "ap-northeast-2"
-  }
-}
-
-# 02-data remote_state → Aurora endpoint
-data "terraform_remote_state" "db" {
-  backend = "s3"
-  config = {
-    bucket = "diehard-ddos-tf-state-lock"
-    key    = "seoul/02-data/terraform.tfstate"
-    region = "ap-northeast-2"
-  }
-}
-
-data "aws_caller_identity" "current" {}
-
-=======
->>>>>>> 506b52d (refactor: 서울 리전 app 리팩토링)
 locals {
   name_prefix = "healthcheck-api-seoul"
   vpc_id      = data.terraform_remote_state.network.outputs.vpc_id
@@ -56,9 +14,7 @@ locals {
 
   ecr_repository = "dh-prod-t1-ecr-healthcheck-api"
   image_tag      = "dev"
-<<<<<<< HEAD
-  image_uri      = "${data.aws_caller_identity.current.account_id}.dkr.ecr.ap-northeast-2.amazonaws.com/${local.ecr_repository}:${local.image_tag}"
-=======
+
   aws_account_id = data.aws_caller_identity.current.account_id
 
   image_uri = "${local.aws_account_id}.dkr.ecr.ap-northeast-2.amazonaws.com/${local.ecr_repository}:${local.image_tag}"
@@ -91,7 +47,6 @@ module "healthcheck_api_app" {
   db_name     = "ddos_noncore"
   db_user     = "admin"
   db_password = "SuperSecretPassword123!"
->>>>>>> 506b52d (refactor: 서울 리전 app 리팩토링)
 
   tags = {
     Project = "ddos"
@@ -103,7 +58,6 @@ module "healthcheck_api_app" {
 <<<<<<< HEAD
 =======
 
-<<<<<<< HEAD
 # DB 비밀번호는 tfvars 또는 CI/CD 시크릿으로 주입 권장 (현재 기본값만 정의)
 variable "aurora_app_password" {
   type      = string
@@ -188,5 +142,3 @@ output "healthcheck_alb_dns_name" {
 output "healthcheck_app_sg_id" {
   value = module.healthcheck_api_asg.app_sg_id
 }
-=======
->>>>>>> 506b52d (refactor: 서울 리전 app 리팩토링)
