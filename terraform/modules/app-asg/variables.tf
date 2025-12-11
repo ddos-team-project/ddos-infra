@@ -130,7 +130,7 @@ variable "db_user" {
   default     = "app_admin"
 }
 
-variable "ssm_parameter_name" {
+variable "db_password_ssm_path" {
   description = "SSM Parameter Store path for DB password (e.g. /ddos/aurora/password)"
   type        = string
 }

@@ -32,7 +32,7 @@ docker pull ${image_uri_full}
 
 # 👇 [중요] SSM Parameter Store에서 DB 비밀번호 조회 (KMS 복호화 포함)
 DB_PASSWORD=$(aws ssm get-parameter \
-  --name "${ssm_parameter_name}" \
+  --name "${db_password_ssm_path}" \
   --with-decryption \
   --query "Parameter.Value" \
   --output text \
