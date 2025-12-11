@@ -1,17 +1,17 @@
 # ========================================
-# 🚫 Global Cluster 관련 코드 (데드락 문제로 주석 처리)
+# ✅ Global Cluster (새로운 이름으로 생성)
 # ========================================
-# resource "aws_rds_global_cluster" "this" {
-#   global_cluster_identifier = var.global_cluster_id
-#   engine                    = var.engine
-#   engine_version            = var.engine_version
-#   storage_encrypted         = true
-#   deletion_protection       = var.deletion_protection
-#
-#   lifecycle {
-#     prevent_destroy = false
-#   }
-# }
+resource "aws_rds_global_cluster" "this" {
+  global_cluster_identifier = "dh-prod-global-rds-v2"
+  engine                    = var.engine
+  engine_version            = var.engine_version
+  storage_encrypted         = true
+  deletion_protection       = var.deletion_protection
+
+  lifecycle {
+    prevent_destroy = false
+  }
+}
 
 # 🚫 기존 Aurora Primary Cluster (데드락 문제로 주석 처리)
 # # module "aurora_primary" {
@@ -88,9 +88,9 @@
 # }
 
 # ========================================
-# ✅ 새로운 Aurora Regional Cluster (Seoul Only)
+# ✅ Aurora Primary Cluster (Seoul - Global Cluster Primary)
 # ========================================
-module "aurora_regional" {
+module "aurora_primary" {
   source  = "terraform-aws-modules/rds-aurora/aws"
   version = "~> 9.0"
 
@@ -102,6 +102,10 @@ module "aurora_regional" {
   vpc_id                 = data.terraform_remote_state.network.outputs.vpc_id
   create_db_subnet_group = true
   subnets                = data.terraform_remote_state.network.outputs.db_subnets
+
+  # Global Cluster 연결 (Primary)
+  global_cluster_identifier = aws_rds_global_cluster.this.id
+  is_primary_cluster        = true
 
   # 암호화 설정 (Seoul KMS Key)
   storage_encrypted = true
@@ -155,7 +159,7 @@ module "aurora_regional" {
     local.common_tags,
     {
       Name = "dh-prod-db-seoul-aurora-v2"
-      Role = "Regional"
+      Role = "Primary"
     }
   )
 }
