@@ -49,7 +49,7 @@ variable "location" {
 variable "cluster_name" {
   description = "Aurora cluster name"
   type        = string
-  default     = "dh-prod-db-tokyo-aurora-secondary"
+  default     = "dh-prod-db-tokyo-aurora-secondary-v2"
 }
 
 variable "engine" {
@@ -62,6 +62,18 @@ variable "engine_version" {
   description = "Aurora engine version"
   type        = string
   default     = "8.0.mysql_aurora.3.04.0"
+}
+
+variable "master_username" {
+  description = "Master username for Aurora"
+  type        = string
+  sensitive   = true
+}
+
+variable "master_password" {
+  description = "Aurora master password (도쿄 SSM에 저장)"
+  type        = string
+  sensitive   = true
 }
 
 variable "source_region" {

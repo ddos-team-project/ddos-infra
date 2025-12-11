@@ -1,22 +1,19 @@
 resource "aws_security_group" "app_tokyo_t1" {
   name        = "dh-prod-t1-tokyo-sg-app"
   description = "App EC2 security group for Tokyo Tier1"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = local.vpc_id
 
-  ## 인바운드
-  # HTTPS 443 from ALB SG만 허용
+  # App Port 8080 from ALB SG only
   ingress {
     description = "Allow app traffic from ALB only"
-    from_port   = 443
-    to_port     = 443
+    from_port   = 8080
+    to_port     = 8080
     protocol    = "tcp"
 
-    #=도쿄 alb-t1에서 오는 요청만 처리
-    security_groups = [aws_security_group.alb_tokyo.id]
+    security_groups = [aws_security_group.alb_tokyo_t1.id]
   }
 
-  ## 아웃바운드
-  # 전체 허용 (추후 필요시 3306/80/443 으로 좁히기)
+  # allow all egress (DB/HTTPS/etc)
   egress {
     description      = "Allow all outbound traffic"
     from_port        = 0
@@ -30,7 +27,7 @@ resource "aws_security_group" "app_tokyo_t1" {
     Name      = "dh-prod-t1-tokyo-sg-app"
     Project   = "dh"
     Env       = "prod"
-    Region    = "apne2"
+    Region    = "apne1"
     ManagedBy = "terraform"
     Owner     = "devops"
     Tier      = "t1"
