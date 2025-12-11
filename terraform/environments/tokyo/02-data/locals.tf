@@ -15,4 +15,5 @@ locals {
   cluster_name        = var.cluster_name
   global_cluster_name = var.global_cluster_id
   kms_key_name        = "${local.name_prefix}-kms"
+  ssm_parameter_path  = "/ddos/aurora/password"
 }

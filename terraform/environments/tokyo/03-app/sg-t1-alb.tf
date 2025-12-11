@@ -1,7 +1,7 @@
-resource "aws_security_group" "alb_tokyo" {
+resource "aws_security_group" "alb_tokyo_t1" {
   name        = "dh-prod-t1-tokyo-sg-alb"
   description = "ALB security group for Tokyo Tier1 non-core services"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = local.vpc_id
 
   tags = {
     Name      = "dh-prod-t1-tokyo-sg-alb"
@@ -14,7 +14,6 @@ resource "aws_security_group" "alb_tokyo" {
   }
 }
 
-## 인바운드 룰
 # HTTP (80) from anywhere
 resource "aws_security_group_rule" "alb_tokyo_ingress_http" {
   type             = "ingress"
@@ -25,7 +24,7 @@ resource "aws_security_group_rule" "alb_tokyo_ingress_http" {
   cidr_blocks      = ["0.0.0.0/0"]
   ipv6_cidr_blocks = ["::/0"]
 
-  security_group_id = aws_security_group.alb_tokyo.id
+  security_group_id = aws_security_group.alb_tokyo_t1.id
 }
 
 # HTTPS (443) from anywhere
@@ -38,11 +37,10 @@ resource "aws_security_group_rule" "alb_tokyo_ingress_https" {
   cidr_blocks      = ["0.0.0.0/0"]
   ipv6_cidr_blocks = ["::/0"]
 
-  security_group_id = aws_security_group.alb_tokyo.id
+  security_group_id = aws_security_group.alb_tokyo_t1.id
 }
 
-## 아웃바운드 룰
-# allow all (ALB → App, health check 등)
+# allow all egress
 resource "aws_security_group_rule" "alb_tokyo_egress_all" {
   type             = "egress"
   description      = "Allow all outbound traffic"
@@ -52,5 +50,5 @@ resource "aws_security_group_rule" "alb_tokyo_egress_all" {
   cidr_blocks      = ["0.0.0.0/0"]
   ipv6_cidr_blocks = ["::/0"]
 
-  security_group_id = aws_security_group.alb_tokyo.id
+  security_group_id = aws_security_group.alb_tokyo_t1.id
 }
