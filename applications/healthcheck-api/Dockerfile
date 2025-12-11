@@ -27,4 +27,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
 EXPOSE 3000
 
 # 컨테이너 시작 시 실행할 명령
-CMD ["node", "server.js"]
+CMD ["node", "src/server.js"]
