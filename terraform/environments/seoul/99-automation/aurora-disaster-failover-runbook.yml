@@ -1,0 +1,92 @@
+description: "Seoul 리전에서 실행. 상대 리전(Tokyo) 장애 시 Seoul 클러스터를 Global Cluster에서 분리하여 독립 클러스터로 유지합니다."
+schemaVersion: "0.3"
+assumeRole: "{{ AutomationAssumeRole }}"
+
+parameters:
+  GlobalClusterIdentifier:
+    type: String
+    description: "(필수) Aurora Global Cluster의 ID."
+    default: "dh-prod-global-rds-v2"
+  LocalClusterRegion:
+    type: String
+    description: "(필수) 현재 리전 (Seoul)."
+    default: "ap-northeast-2"
+  LocalClusterIdentifier:
+    type: String
+    description: "(필수) 현재 리전의 클러스터 ID. Seoul 클러스터를 Global Cluster에서 분리"
+    default: "dh-prod-db-seoul-aurora-v2"
+  LocalClusterEndpoint:
+    type: String
+    description: "(필수) 현재 리전의 클러스터 엔드포인트 주소."
+    default: "dh-prod-db-seoul-aurora-v2.cluster-clg0eecwg923.ap-northeast-2.rds.amazonaws.com"
+  DbEndpointParameterName:
+    type: String
+    description: "(필수) DB 엔드포인트 주소를 저장할 SSM Parameter의 이름."
+    default: "/ddos/aurora/cluster_endpoint"
+  AutomationAssumeRole:
+    type: String
+    description: "(선택) Automation을 실행할 IAM 역할의 ARN."
+    default: ""
+
+mainSteps:
+  - name: VerifyGlobalClusterStatus
+    action: aws:executeAwsApi
+    description: "Global Cluster의 상태를 확인합니다. 상대 리전 장애 시에는 조회가 실패할 수 있으므로 에러를 무시합니다."
+    onFailure: Continue
+    inputs:
+      Service: rds
+      Api: DescribeGlobalClusters
+      GlobalClusterIdentifier: "{{ GlobalClusterIdentifier }}"
+    outputs:
+      - Name: GlobalClusterStatus
+        Selector: "$.GlobalClusters[0].Status"
+        Type: String
+
+  - name: DetachLocalCluster
+    action: aws:executeAwsApi
+    description: "Seoul 클러스터를 Global Cluster에서 분리하여 독립 클러스터로 유지합니다."
+    onFailure: Continue
+    inputs:
+      Service: rds
+      Api: RemoveFromGlobalCluster
+      GlobalClusterIdentifier: "{{ GlobalClusterIdentifier }}"
+      DbClusterIdentifier: "{{ LocalClusterIdentifier }}"
+
+  - name: WaitForClusterAvailable
+    action: aws:waitForAwsResourceProperty
+    description: "분리된 클러스터가 available 상태가 될 때까지 대기합니다."
+    timeoutSeconds: 900
+    onFailure: Abort
+    inputs:
+      Service: rds
+      Api: DescribeDBClusters
+      DBClusterIdentifier: "{{ LocalClusterIdentifier }}"
+      PropertySelector: "$.DBClusters[0].Status"
+      DesiredValues:
+        - "available"
+
+  - name: UpdateSsmParameter
+    action: aws:executeAwsApi
+    description: "Seoul 클러스터 엔드포인트를 SSM Parameter Store에 업데이트합니다."
+    inputs:
+      Service: ssm
+      Api: PutParameter
+      Name: "{{ DbEndpointParameterName }}"
+      Value: "{{ LocalClusterEndpoint }}"
+      Type: String
+      Overwrite: true
+
+  - name: VerifyDisasterFailover
+    action: aws:executeAwsApi
+    description: "재해 복구 페일오버가 성공적으로 완료되었는지 최종 확인합니다."
+    inputs:
+      Service: rds
+      Api: DescribeDBClusters
+      DBClusterIdentifier: "{{ LocalClusterIdentifier }}"
+    outputs:
+      - Name: ClusterStatus
+        Selector: "$.DBClusters[0].Status"
+        Type: String
+      - Name: ClusterEndpoint
+        Selector: "$.DBClusters[0].Endpoint"
+        Type: String

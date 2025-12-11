@@ -19,6 +19,11 @@ variable "failback_runbook_content" {
   type        = string
 }
 
+variable "disaster_failover_runbook_content" {
+  description = "Content of the disaster failover runbook YAML file for regional outage scenarios"
+  type        = string
+}
+
 variable "db_endpoint_parameter_name" {
   description = "SSM Parameter name for DB endpoint"
   type        = string

@@ -35,6 +35,7 @@ resource "aws_iam_policy" "ssm_automation_policy" {
         Effect = "Allow",
         Action = [
           "rds:FailoverGlobalCluster",
+          "rds:RemoveFromGlobalCluster",
           "rds:DescribeGlobalClusters",
           "rds:DescribeDBClusters"
         ],
@@ -44,7 +45,7 @@ resource "aws_iam_policy" "ssm_automation_policy" {
       {
         Effect   = "Allow",
         Action   = "ssm:PutParameter",
-        Resource = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${var.db_endpoint_parameter_name}"
+        Resource = "arn:aws:ssm:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:parameter${var.db_endpoint_parameter_name}"
       }
     ]
   })
@@ -76,6 +77,17 @@ resource "aws_ssm_document" "aurora_failback_runbook" {
   document_format = "YAML"
 
   content = var.failback_runbook_content
+
+  tags = var.tags
+}
+
+# SSM Automation Document - Disaster Failover (리전 전체 장애 시)
+resource "aws_ssm_document" "aurora_disaster_failover_runbook" {
+  name            = "Aurora-Disaster-Failover-Runbook-${var.region_name}"
+  document_type   = "Automation"
+  document_format = "YAML"
+
+  content = var.disaster_failover_runbook_content
 
   tags = var.tags
 }
