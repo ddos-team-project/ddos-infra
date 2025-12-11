@@ -10,8 +10,8 @@ variable "project" {
   default     = "dh"
 }
 
-variable "environment" {
-  description = "Environment name"
+variable "env" {
+  description = "Environment (prod, poc)"
   type        = string
   default     = "prod"
 }
@@ -32,6 +32,12 @@ variable "owner" {
   description = "Resource owner"
   type        = string
   default     = "devops"
+}
+
+variable "region" {
+  description = "Region (seoul/tokyo)"
+  type        = string
+  default     = "seoul"
 }
 
 variable "global_cluster_id" {
@@ -116,4 +122,14 @@ variable "kms_key_deletion_window" {
   description = "KMS key deletion window in days"
   type        = number
   default     = 7
+}
+
+
+variable "log_groups_by_tier" {
+  description = "log group by"
+  type        = map(list(string))
+  default = {
+    t1 = ["api", "auth"]
+    t2 = ["batch", "worker"]
+  }
 }

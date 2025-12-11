@@ -22,7 +22,6 @@ module "healthcheck_api_alb" {
 module "healthcheck_api_asg" {
   source = "../../../modules/app-asg"
 
-
   name           = local.name_prefix
   vpc_id         = local.vpc_id
   app_subnet_ids = local.app_subnet_ids
@@ -32,8 +31,22 @@ module "healthcheck_api_asg" {
   app_port       = 8080
   container_port = 3000
 
+
   image_uri  = local.image_uri
   aws_region = "ap-northeast-2"
+  db_host            = local.db_host
+  db_name            = "ddos_noncore"
+  db_user            = "admin"
+  ssm_parameter_name = "/ddos/aurora/password"
+
+  cwagent_ssm_name = local.cwagent_ssm_path
+
+  #Metadata for log templating
+  env     = "prod"
+  project = "ddos"
+  tier    = "t1"
+  region  = "seoul"
+
 
   service_name = "ddos-healthcheck-api"
   region_label = "seoul"

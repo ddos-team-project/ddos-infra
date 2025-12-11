@@ -52,3 +52,18 @@ docker run -d \
   -e DB_USER="${db_user}" \
   -e DB_PASSWORD="$DB_PASSWORD" \
   ${image_uri_full}
+#CloudWatch Agent 설치
+sudo dnf install -y amazon-cloudwatch-agent
+
+aws ssm get-parameter \
+  --name "${cwagent_ssm_name}" \
+  --with-decryption \
+  --query "Parameter.Value" \
+  --output text \
+  --region ${aws_region} \
+  > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+
+
+
+sudo systemctl enable amazon-cloudwatch-agent
+sudo systemctl restart amazon-cloudwatch-agent
