@@ -5,45 +5,30 @@ assumeRole: "{{ AutomationAssumeRole }}" # 이 Automation을 실행할 IAM 역�
 parameters:
   GlobalClusterIdentifier:
     type: String
-    description: "(필수) 페일백을 수행할 Aurora Global Cluster의 ID. (예: dh-prod-global-rds-v2)"
+    description: "(필수) 페일백을 수행할 Aurora Global Cluster의 ID."
+    default: "dh-prod-global-rds-v2"
   OriginalPrimaryRegion:
     type: String
-    description: "(필수) 원래 Primary였던 리전으로 다시 복구할 리전. (예: ap-northeast-2)"
+    description: "(필수) 원래 Primary였던 리전으로 다시 복구할 리전. Tokyo→Seoul 페일백 시 ap-northeast-2 사용"
+    default: "ap-northeast-2"
   OriginalPrimaryClusterArn:
     type: String
-    description: "(필수) 원래 Primary로 복구시킬 클러스터의 ARN."
+    description: "(필수) 원래 Primary로 복구시킬 클러스터의 ARN. Tokyo→Seoul 페일백 시 Seoul 클러스터 ARN 사용"
+    default: "arn:aws:rds:ap-northeast-2:331221168354:cluster:dh-prod-db-seoul-aurora-v2"
+  OriginalPrimaryEndpoint:
+    type: String
+    description: "(필수) 원래 Primary 클러스터의 엔드포인트 주소. Seoul 페일백 시 Seoul 클러스터 엔드포인트 입력"
+    default: "dh-prod-db-seoul-aurora-v2.cluster-clg0eecwg923.ap-northeast-2.rds.amazonaws.com"
   DbEndpointParameterName:
     type: String
-    description: "(필수) DB 엔드포인트 주소를 저장할 SSM Parameter의 이름. (예: /app/db_endpoint)"
+    description: "(필수) DB 엔드포인트 주소를 저장할 SSM Parameter의 이름."
+    default: "/ddos/aurora/cluster_endpoint"
   AutomationAssumeRole:
     type: String
-    description: "(선택) Automation을 실행할 IAM 역할의 ARN. (기본값은 지정된 role을 assume)"
+    description: "(선택) Automation을 실행할 IAM 역할의 ARN."
     default: ""
 
 mainSteps:
-  - name: VerifyOriginalPrimaryHealth
-    action: aws:executeAwsApi
-    description: "페일백 전 원래 Primary 클러스터의 상태를 확인합니다."
-    inputs:
-      Service: rds
-      Api: DescribeDBClusters
-      DBClusterIdentifier: "{{ OriginalPrimaryClusterArn }}"
-    outputs:
-      - Name: ClusterStatus
-        Selector: "$.DBClusters[0].Status"
-        Type: String
-
-  - name: CheckClusterAvailability
-    action: aws:assertAwsResourceProperty
-    description: "원래 Primary 클러스터가 'available' 상태인지 확인합니다."
-    inputs:
-      Service: rds
-      Api: DescribeDBClusters
-      DBClusterIdentifier: "{{ OriginalPrimaryClusterArn }}"
-      PropertySelector: "$.DBClusters[0].Status"
-      DesiredValues:
-        - "available"
-
   - name: VerifyReplicationLag
     action: aws:executeAwsApi
     description: "페일백 전 글로벌 클러스터의 복제 상태를 확인합니다."
@@ -77,26 +62,14 @@ mainSteps:
       DesiredValues:
         - "{{ OriginalPrimaryClusterArn }}"
 
-  - name: GetRestoredPrimaryEndpoint
-    action: aws:executeAwsApi
-    description: "복구된 Primary DB 클러스터의 엔드포인트 주소를 조회합니다."
-    inputs:
-      Service: rds
-      Api: DescribeDBClusters
-      DBClusterIdentifier: "{{ OriginalPrimaryClusterArn }}"
-    outputs:
-      - Name: RestoredEndpoint
-        Selector: "$.DBClusters[0].Endpoint"
-        Type: String
-
   - name: UpdateSsmParameter
     action: aws:executeAwsApi
-    description: "복구된 엔드포인트 주소를 SSM Parameter Store에 업데이트하여 CI/CD 파이프라인을 트리거합니다."
+    description: "복구된 Primary 엔드포인트 주소를 SSM Parameter Store에 업데이트합니다."
     inputs:
       Service: ssm
       Api: PutParameter
       Name: "{{ DbEndpointParameterName }}"
-      Value: "{{ GetRestoredPrimaryEndpoint.RestoredEndpoint }}"
+      Value: "{{ OriginalPrimaryEndpoint }}"
       Type: String
       Overwrite: true
 
