@@ -86,9 +86,9 @@ data "template_file" "user_data" {
     db_port            = var.db_port
     db_name            = var.db_name
     db_user            = var.db_user
-    ssm_parameter_name = var.ssm_parameter_name
     allow_stress       = var.allow_stress_endpoint
     cwagent_ssm_name   = var.cwagent_ssm_name
+    db_password_ssm_path = var.db_password_ssm_path
   }
 }
 
@@ -124,11 +124,11 @@ resource "aws_launch_template" "this" {
     db_port            = var.db_port
     db_name            = var.db_name
     db_user            = var.db_user
-    ssm_parameter_name = var.ssm_parameter_name
     allow_stress       = var.allow_stress_endpoint
     idc_host           = var.idc_host
     idc_port           = var.idc_port
     cwagent_ssm_name   = var.cwagent_ssm_name
+    db_password_ssm_path = var.db_password_ssm_path
   }))
 
   network_interfaces {
