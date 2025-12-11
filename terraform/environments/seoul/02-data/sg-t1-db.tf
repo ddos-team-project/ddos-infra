@@ -18,7 +18,7 @@ resource "aws_security_group" "aurora_seoul_t1" {
   }
 
   tags = {
-    Name      = "ddh-prod-t1-seoul-sg-db"
+    Name      = "dh-prod-t1-seoul-sg-db"
     Project   = "dh"
     Env       = "prod"
     Region    = "apne2"

@@ -106,13 +106,8 @@ variable "db_user" {
   default     = "app_admin"
 }
 
-<<<<<<< HEAD
 variable "ssm_parameter_name" {
   description = "SSM Parameter Store path for DB password (e.g. /ddos/aurora/password)"
-=======
-variable "db_password" {
-  description = "Aurora 비밀번호"
->>>>>>> 43abaa0 (﻿refactor: ALB/TG 모듈 분리 및 서울 app 레이어 정리)
   type        = string
 }
 
