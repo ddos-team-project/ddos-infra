@@ -5,19 +5,27 @@ assumeRole: "{{ AutomationAssumeRole }}" # 이 Automation을 실행할 IAM 역�
 parameters:
   GlobalClusterIdentifier:
     type: String
-    description: "(필수) 장애 조치를 수행할 Aurora Global Cluster의 ID. (예: dh-prod-global-rds-v2)"
+    description: "(필수) 장애 조치를 수행할 Aurora Global Cluster의 ID."
+    default: "dh-prod-global-rds-v2"
   TargetRegion:
     type: String
-    description: "(필수) 새로운 Primary로 승격시킬 리전. (예: ap-northeast-1)"
+    description: "(필수) 새로운 Primary로 승격시킬 리전. Seoul→Tokyo 페일오버 시 ap-northeast-1 사용"
+    default: "ap-northeast-1"
   TargetClusterArn:
     type: String
-    description: "(필수) 새로운 Primary로 승격시킬 클러스터의 ARN."
+    description: "(필수) 새로운 Primary로 승격시킬 클러스터의 ARN. Seoul→Tokyo 페일오버 시 Tokyo 클러스터 ARN 사용"
+    default: "arn:aws:rds:ap-northeast-1:331221168354:cluster:dh-prod-db-tokyo-aurora-secondary-v2"
+  TargetClusterEndpoint:
+    type: String
+    description: "(필수) 새로운 Primary 클러스터의 엔드포인트 주소. Tokyo 페일오버 시 Tokyo 클러스터 엔드포인트 입력"
+    default: "dh-prod-db-tokyo-aurora-secondary-v2.cluster-clg0eecwg923.ap-northeast-1.rds.amazonaws.com"
   DbEndpointParameterName:
     type: String
-    description: "(필수) DB 엔드포인트 주소를 저장할 SSM Parameter의 이름. (예: /app/db_endpoint)"
+    description: "(필수) DB 엔드포인트 주소를 저장할 SSM Parameter의 이름."
+    default: "/ddos/aurora/cluster_endpoint"
   AutomationAssumeRole:
     type: String
-    description: "(선택) Automation을 실행할 IAM 역할의 ARN. (기본값은 지정된 role을 assume)"
+    description: "(선택) Automation을 실행할 IAM 역할의 ARN."
     default: ""
 
 mainSteps:
@@ -45,25 +53,13 @@ mainSteps:
       DesiredValues:
         - "{{ TargetClusterArn }}"
 
-  - name: GetNewPrimaryEndpoint
-    action: aws:executeAwsApi
-    description: "새롭게 Primary가 된 DB 클러스터의 엔드포인트 주소를 조회합니다."
-    inputs:
-      Service: rds
-      Api: DescribeDBClusters
-      DBClusterIdentifier: "{{ TargetClusterArn }}"
-    outputs:
-      - Name: NewEndpoint
-        Selector: "$.DBClusters[0].Endpoint"
-        Type: String
-
   - name: UpdateSsmParameter
     action: aws:executeAwsApi
-    description: "조회한 새 엔드포인트 주소를 SSM Parameter Store에 업데이트하여 CI/CD 파이프라인을 트리거합니다."
+    description: "새 Primary 엔드포인트 주소를 SSM Parameter Store에 업데이트합니다."
     inputs:
       Service: ssm
       Api: PutParameter
       Name: "{{ DbEndpointParameterName }}"
-      Value: "{{ GetNewPrimaryEndpoint.NewEndpoint }}"
+      Value: "{{ TargetClusterEndpoint }}"
       Type: String
       Overwrite: true
