@@ -15,6 +15,15 @@ resource "aws_security_group" "app_seoul_t1" {
     security_groups = [aws_security_group.alb_seoul_t1.id]
   }
 
+  # ✅ IDC(192.168.0.0/24)에서 오는 ICMP(Ping) 허용
+  ingress {
+    description = "Allow ICMP from IDC VPN"
+    from_port   = -1 # 모든 ICMP
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["192.168.0.0/24"]
+  }
+
   ## 아웃바운드
   # 전체 허용 (추후 필요시 3306/80/443 으로 좁히기)
   egress {
