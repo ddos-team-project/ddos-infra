@@ -14,11 +14,11 @@ variable "aurora_app_password" {
 variable "route53_zone_name" {
   description = "Route53 호스팅 존 이름 (예: example.com). null이면 Route53 레코드 생성 안함"
   type        = string
-  default     = null
+  default     = "ddos.io.kr"
 }
 
-variable "route53_record_name" {
+variable "route53_tier1_record" {
   description = "ALB를 가리킬 레코드 이름 (예: healthcheck.example.com). null이면 Route53 레코드 생성 안함"
   type        = string
-  default     = null
+  default     = "tier1.ddos.io.kr"
 }

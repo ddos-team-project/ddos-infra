@@ -1,3 +1,11 @@
+module "tier1_acm_certificate" {
+  source = "../../../modules/acm-certificate"
+
+  domain_name      = var.route53_tier1_record
+  route53_zone_id  = data.aws_route53_zone.root[0].zone_id
+  tags             = local.tags
+}
+
 module "healthcheck_api_alb" {
   source = "../../../modules/app-alb"
 
@@ -7,6 +15,7 @@ module "healthcheck_api_alb" {
   alb_sg_ids        = [aws_security_group.alb_seoul_t1.id]
   app_port          = 8080
   health_check_path = "/health"
+  certificate_arn   = module.tier1_acm_certificate.certificate_arn
   tags              = local.tags
 }
 
