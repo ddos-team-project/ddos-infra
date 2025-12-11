@@ -92,6 +92,8 @@ data "template_file" "user_data" {
     cwagent_ssm_name     = var.cwagent_ssm_name
     db_password_ssm_path = var.db_password_ssm_path
 
+    db_password_ssm_path = var.db_password_ssm_path
+
   }
 }
 
