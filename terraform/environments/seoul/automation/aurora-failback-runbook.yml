@@ -1,0 +1,116 @@
+description: "Aurora Global Database Failback을 수행하여 원래 Primary 리전으로 복구하고, SSM Parameter를 업데이트하여 애플리케이션 재배포를 트리거합니다."
+schemaVersion: "0.3"
+assumeRole: "{{ AutomationAssumeRole }}" # 이 Automation을 실행할 IAM 역할
+
+parameters:
+  GlobalClusterIdentifier:
+    type: String
+    description: "(필수) 페일백을 수행할 Aurora Global Cluster의 ID. (예: dh-prod-global-rds-v2)"
+  OriginalPrimaryRegion:
+    type: String
+    description: "(필수) 원래 Primary였던 리전으로 다시 복구할 리전. (예: ap-northeast-2)"
+  OriginalPrimaryClusterArn:
+    type: String
+    description: "(필수) 원래 Primary로 복구시킬 클러스터의 ARN."
+  DbEndpointParameterName:
+    type: String
+    description: "(필수) DB 엔드포인트 주소를 저장할 SSM Parameter의 이름. (예: /app/db_endpoint)"
+  AutomationAssumeRole:
+    type: String
+    description: "(선택) Automation을 실행할 IAM 역할의 ARN. (기본값은 지정된 role을 assume)"
+    default: ""
+
+mainSteps:
+  - name: VerifyOriginalPrimaryHealth
+    action: aws:executeAwsApi
+    description: "페일백 전 원래 Primary 클러스터의 상태를 확인합니다."
+    inputs:
+      Service: rds
+      Api: DescribeDBClusters
+      DBClusterIdentifier: "{{ OriginalPrimaryClusterArn }}"
+    outputs:
+      - Name: ClusterStatus
+        Selector: "$.DBClusters[0].Status"
+        Type: String
+
+  - name: CheckClusterAvailability
+    action: aws:assertAwsResourceProperty
+    description: "원래 Primary 클러스터가 'available' 상태인지 확인합니다."
+    inputs:
+      Service: rds
+      Api: DescribeDBClusters
+      DBClusterIdentifier: "{{ OriginalPrimaryClusterArn }}"
+      PropertySelector: "$.DBClusters[0].Status"
+      DesiredValues:
+        - "available"
+
+  - name: VerifyReplicationLag
+    action: aws:executeAwsApi
+    description: "페일백 전 글로벌 클러스터의 복제 상태를 확인합니다."
+    inputs:
+      Service: rds
+      Api: DescribeGlobalClusters
+      GlobalClusterIdentifier: "{{ GlobalClusterIdentifier }}"
+    outputs:
+      - Name: GlobalClusterStatus
+        Selector: "$.GlobalClusters[0].Status"
+        Type: String
+
+  - name: FailbackGlobalCluster
+    action: aws:executeAwsApi
+    description: "원래 Primary 클러스터를 다시 Primary로 승격시키는 Failback을 시작합니다."
+    inputs:
+      Service: rds
+      Api: FailoverGlobalCluster
+      GlobalClusterIdentifier: "{{ GlobalClusterIdentifier }}"
+      TargetDbClusterIdentifier: "{{ OriginalPrimaryClusterArn }}"
+
+  - name: WaitForFailbackCompletion
+    action: aws:waitForAwsResourceProperty
+    timeoutSeconds: 600
+    description: "Failback이 완료될 때까지 대기합니다. 원래 Primary 클러스터가 Writer가 되면 다음 단계로 진행합니다."
+    inputs:
+      Service: rds
+      Api: DescribeGlobalClusters
+      GlobalClusterIdentifier: "{{ GlobalClusterIdentifier }}"
+      PropertySelector: "$.GlobalClusters[0].GlobalClusterMembers[?(@.IsWriter == true)].DBClusterArn"
+      DesiredValues:
+        - "{{ OriginalPrimaryClusterArn }}"
+
+  - name: GetRestoredPrimaryEndpoint
+    action: aws:executeAwsApi
+    description: "복구된 Primary DB 클러스터의 엔드포인트 주소를 조회합니다."
+    inputs:
+      Service: rds
+      Api: DescribeDBClusters
+      DBClusterIdentifier: "{{ OriginalPrimaryClusterArn }}"
+    outputs:
+      - Name: RestoredEndpoint
+        Selector: "$.DBClusters[0].Endpoint"
+        Type: String
+
+  - name: UpdateSsmParameter
+    action: aws:executeAwsApi
+    description: "복구된 엔드포인트 주소를 SSM Parameter Store에 업데이트하여 CI/CD 파이프라인을 트리거합니다."
+    inputs:
+      Service: ssm
+      Api: PutParameter
+      Name: "{{ DbEndpointParameterName }}"
+      Value: "{{ GetRestoredPrimaryEndpoint.RestoredEndpoint }}"
+      Type: String
+      Overwrite: true
+
+  - name: VerifyFailbackSuccess
+    action: aws:executeAwsApi
+    description: "페일백 완료 후 글로벌 클러스터의 최종 상태를 확인합니다."
+    inputs:
+      Service: rds
+      Api: DescribeGlobalClusters
+      GlobalClusterIdentifier: "{{ GlobalClusterIdentifier }}"
+    outputs:
+      - Name: FinalStatus
+        Selector: "$.GlobalClusters[0].Status"
+        Type: String
+      - Name: CurrentPrimaryArn
+        Selector: "$.GlobalClusters[0].GlobalClusterMembers[?(@.IsWriter == true)].DBClusterArn"
+        Type: String

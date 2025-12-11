@@ -2,9 +2,9 @@
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
-# 1. SSM Automation을 실행할 IAM 역할 생성
+# 1. SSM Automation을 실행할 IAM 역할 생성 (Failover/Failback 공용)
 resource "aws_iam_role" "ssm_automation_failover_role" {
-  name = "SSMAutomation-FailoverRole-Seoul" # 환경에 따라 이름을 명확히
+  name = "SSMAutomation-AuroraRole-Seoul" # Failover와 Failback 모두 사용
 
   assume_role_policy = jsonencode({
     Version   = "2012-10-17",
@@ -24,8 +24,8 @@ resource "aws_iam_role" "ssm_automation_failover_role" {
 
 # 2. 역할에 부여할 권한 정책(Policy) 정의
 resource "aws_iam_policy" "ssm_automation_failover_policy" {
-  name        = "SSMAutomation-FailoverPolicy-Seoul" # 환경에 따라 이름을 명확히
-  description = "Policy for Aurora Global DB Failover Automation in Seoul environment"
+  name        = "SSMAutomation-AuroraPolicy-Seoul" # Failover와 Failback 모두 사용
+  description = "Policy for Aurora Global DB Failover and Failback Automation in Seoul environment"
 
   policy = jsonencode({
     Version   = "2012-10-17",
@@ -57,13 +57,24 @@ resource "aws_iam_role_policy_attachment" "ssm_automation_failover_attach" {
   policy_arn = aws_iam_policy.ssm_automation_failover_policy.arn
 }
 
-# 4. SSM Automation Document 정의
+# 4. SSM Automation Document 정의 - Failover
 resource "aws_ssm_document" "aurora_failover_runbook" {
   name            = "Aurora-Failover-Runbook-Seoul" # 환경에 따라 이름을 명확히
   document_type   = "Automation"
   document_format = "YAML"
 
   content = file("${path.module}/aurora-failover-runbook.yml")
+
+  tags = local.common_tags
+}
+
+# 5. SSM Automation Document 정의 - Failback
+resource "aws_ssm_document" "aurora_failback_runbook" {
+  name            = "Aurora-Failback-Runbook-Seoul" # 환경에 따라 이름을 명확히
+  document_type   = "Automation"
+  document_format = "YAML"
+
+  content = file("${path.module}/aurora-failback-runbook.yml")
 
   tags = local.common_tags
 }
