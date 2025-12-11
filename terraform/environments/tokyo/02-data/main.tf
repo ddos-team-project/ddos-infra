@@ -12,8 +12,8 @@ module "aurora_secondary" {
   create_db_subnet_group = true
   subnets                = data.terraform_remote_state.network_tokyo.outputs.db_subnets
 
-  # Global Cluster 연결 (Secondary)
-  global_cluster_identifier      = var.global_cluster_id
+  # Global Cluster 연결 (Secondary) - Seoul의 Global Cluster 참조
+  global_cluster_identifier      = data.terraform_remote_state.data_seoul.outputs.global_cluster_id
   source_region                  = var.source_region
   enable_global_write_forwarding = var.enable_global_write_forwarding
 
