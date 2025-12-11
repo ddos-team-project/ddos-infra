@@ -44,3 +44,11 @@ module "vpc" {
 
   tags = local.common_tags
 }
+
+# Private 서브넷 → 온프레미스(192.168.0.0/24) 트래픽을 TGW/VPN으로 전달
+resource "aws_route" "private_to_onprem" {
+  for_each               = toset(module.vpc.private_route_table_ids)
+  route_table_id         = each.value
+  destination_cidr_block = "192.168.0.0/24"
+  transit_gateway_id     = aws_ec2_transit_gateway.seoul_tgw.id
+}

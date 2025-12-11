@@ -64,7 +64,11 @@ resource "aws_vpn_connection" "idc" {
   )
 }
 
-# TGW Route Table 자동 전파
-# TGW 설정의 default_route_table_propagation = "enable"로 인해
-# VPN Connection 생성 시 자동으로 192.168.0.0/24 경로가 TGW Route Table에 추가됨
-# 따라서 별도의 Static Route 리소스 불필요
+# TGW Route Table: 192.168.0.0/24 -> IDC(VPN) Attachment
+resource "aws_ec2_transit_gateway_route" "idc_192_168_0_0_24" {
+  destination_cidr_block         = "192.168.0.0/24"
+  transit_gateway_route_table_id = aws_ec2_transit_gateway.seoul_tgw.association_default_route_table_id
+  transit_gateway_attachment_id  = aws_vpn_connection.idc.transit_gateway_attachment_id
+}
+
+# 참고: TGW default_route_table_propagation = "enable"이라도, static VPN 경로를 확실히 보장하려고 명시적으로 추가
