@@ -53,8 +53,8 @@ module "healthcheck_api_asg" {
   db_host            = local.db_host
   db_name            = "ddos_noncore"
   db_user            = "admin"
-  ssm_parameter_name = "/ddos/aurora/password"
   cwagent_ssm_name   = "/prod/ddos/t1/seoul/cloudwatch/config"
+  db_password_ssm_path = "/ddos/aurora/password"
 
   target_group_arns = [module.healthcheck_api_alb.target_group_arn]
 

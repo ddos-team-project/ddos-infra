@@ -9,10 +9,10 @@ module "tier1_acm_certificate" {
 module "healthcheck_api_alb" {
   source = "../../../modules/app-alb"
 
-  name              = local.name_prefix
-  vpc_id            = local.vpc_id
-  alb_subnet_ids    = local.alb_subnet_ids
-  alb_sg_ids        = [aws_security_group.alb_tokyo_t1.id]
+  name           = local.name_prefix
+  vpc_id         = local.vpc_id
+  alb_subnet_ids = local.alb_subnet_ids
+  alb_sg_ids     = [aws_security_group.alb_tokyo_t1.id]
 
   app_port          = 8080
   health_check_path = "/health"
@@ -37,11 +37,12 @@ module "healthcheck_api_asg" {
   region_label = "tokyo"
   app_env      = "prod"
 
-  db_host            = local.db_host
-  db_name            = "ddos_noncore"
-  db_user            = "admin"
-  ssm_parameter_name = "/ddos/aurora/password"
-  cwagent_ssm_name   = "/prod/ddos/t1/tokyo/cloudwatch/config"
+  db_host = local.db_host
+  db_name = "ddos_noncore"
+  db_user = "admin"
+
+  cwagent_ssm_name     = "/prod/ddos/t1/tokyo/cloudwatch/config"
+  db_password_ssm_path = "/ddos/aurora/password"
 
   target_group_arns = [module.healthcheck_api_alb.target_group_arn]
 
