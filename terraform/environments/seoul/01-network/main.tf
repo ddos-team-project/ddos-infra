@@ -9,10 +9,10 @@ module "vpc" {
   azs = var.availability_zones
 
   # 서브넷 설계
-  public_subnets   = var.public_subnets    # L1: Public (ALB, NAT)
-  private_subnets  = var.private_subnets   # L3: Service (App - EKS)
-  database_subnets = var.database_subnets  # L2: Base (DB)
-  intra_subnets    = var.intra_subnets     # Infra (TGW, Endpoint)
+  public_subnets   = var.public_subnets   # L1: Public (ALB, NAT)
+  private_subnets  = var.private_subnets  # L3: Service (App - EKS)
+  database_subnets = var.database_subnets # L2: Base (DB)
+  intra_subnets    = var.intra_subnets    # Infra (TGW, Endpoint)
 
   # NAT Gateway 설정
   enable_nat_gateway = var.enable_nat_gateway

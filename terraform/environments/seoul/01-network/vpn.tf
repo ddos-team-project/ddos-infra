@@ -66,7 +66,11 @@ resource "aws_vpn_connection" "idc" {
 
 # TGW Route Table: 192.168.0.0/24 -> IDC(VPN) Attachment
 resource "aws_ec2_transit_gateway_route" "idc_192_168_0_0_24" {
+<<<<<<< HEAD
   destination_cidr_block         = var.idc_host_cidr
+=======
+  destination_cidr_block         = "192.168.0.0/24"
+>>>>>>> e340cf6 (fix: route53 중복생성 해결)
   transit_gateway_route_table_id = aws_ec2_transit_gateway.seoul_tgw.association_default_route_table_id
   transit_gateway_attachment_id  = aws_vpn_connection.idc.transit_gateway_attachment_id
 }

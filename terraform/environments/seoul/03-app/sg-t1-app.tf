@@ -21,17 +21,19 @@ resource "aws_security_group" "app_seoul_t1" {
     from_port   = -1 # 모든 ICMP
     to_port     = -1
     protocol    = "icmp"
+
     cidr_blocks = [local.idc_host_cidr]
+
   }
 
   ## 아웃바운드
   # 전체 허용 (추후 필요시 3306/80/443 으로 좁히기)
   egress {
-    description      = "Allow all outbound traffic"
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
+    description = "Allow all outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = {
