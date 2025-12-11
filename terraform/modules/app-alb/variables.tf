@@ -36,3 +36,8 @@ variable "alb_sg_ids" {
   type        = list(string)
   default     = []
 }
+
+variable "certificate_arn" {
+  description = "HTTPS 리스너용 ACM 인증서 ARN (필수)"
+  type        = string
+}

@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="backup">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/terraform/environments/seoul/02-data/.terraform/modules/aurora_primary/examples/s3-import/backup.zip!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
