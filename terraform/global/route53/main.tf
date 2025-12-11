@@ -11,7 +11,7 @@ terraform {
 
 provider "aws" {
   region  = "ap-northeast-2"
-  profile = "admin-role"
+  # profile = "admin-role"
 }
 
 ###############################
