@@ -84,7 +84,7 @@ data "template_file" "user_data" {
     db_port            = var.db_port
     db_name            = var.db_name
     db_user            = var.db_user
-    db_password        = var.db_password
+    ssm_parameter_name = var.ssm_parameter_name
   }
 }
 
@@ -101,7 +101,7 @@ resource "aws_launch_template" "this" {
   block_device_mappings {
     device_name = "/dev/xvda"
     ebs {
-      volume_size = 10
+      volume_size = 30
       volume_type = "gp3"
       encrypted   = true
     }
@@ -175,7 +175,7 @@ resource "aws_autoscaling_group" "this" {
   }
 }
 data "aws_ami" "amazon_linux_2023" {
-  count      = var.ami_id == null ? 1 : 0
+  count       = var.ami_id == null ? 1 : 0
   most_recent = true
   owners      = ["amazon"]
 
