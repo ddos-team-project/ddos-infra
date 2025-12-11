@@ -38,6 +38,8 @@ data "aws_iam_policy_document" "ec2_assume" {
   }
 }
 
+
+
 # EC2가 컨테이너 이미지를 ECR에서 가져가고 로그를 CloudWatch에 남길 수 있도록 권한 설정
 data "aws_iam_policy_document" "ec2_policy" {
   statement {
@@ -214,6 +216,7 @@ data "template_file" "user_data" {
     db_name            = var.db_name
     db_user            = var.db_user
     ssm_parameter_name = var.ssm_parameter_name
+    cwagent_ssm_name   = var.cwagent_ssm_name
   }
 }
 
