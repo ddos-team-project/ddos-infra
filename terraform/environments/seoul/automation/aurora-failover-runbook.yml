@@ -1,0 +1,69 @@
+description: "Aurora Global Database Failover를 수행하고, SSM Parameter를 업데이트하여 애플리케이션 재배포를 트리거합니다."
+schemaVersion: "0.3"
+assumeRole: "{{ AutomationAssumeRole }}" # 이 Automation을 실행할 IAM 역할
+
+parameters:
+  GlobalClusterIdentifier:
+    type: String
+    description: "(필수) 장애 조치를 수행할 Aurora Global Cluster의 ID. (예: dh-prod-global-rds-v2)"
+  TargetRegion:
+    type: String
+    description: "(필수) 새로운 Primary로 승격시킬 리전. (예: ap-northeast-1)"
+  TargetClusterArn:
+    type: String
+    description: "(필수) 새로운 Primary로 승격시킬 클러스터의 ARN."
+  DbEndpointParameterName:
+    type: String
+    description: "(필수) DB 엔드포인트 주소를 저장할 SSM Parameter의 이름. (예: /app/db_endpoint)"
+  AutomationAssumeRole:
+    type: String
+    description: "(선택) Automation을 실행할 IAM 역할의 ARN. (기본값은 지정된 role을 assume)"
+    default: ""
+
+mainSteps:
+  - name: FailoverGlobalCluster
+    action: aws:executeAwsApi
+    description: "지정된 Target Cluster를 새로운 Primary로 승격시키는 Failover를 시작합니다."
+    inputs:
+      Service: rds
+      Api: FailoverGlobalCluster
+      GlobalClusterIdentifier: "{{ GlobalClusterIdentifier }}"
+      TargetDbClusterIdentifier: "{{ TargetClusterArn }}"
+      # TargetDbClusterIdentifier가 있는 리전에서 API를 호출해야 함
+      # 이 부분은 Lambda를 사용하거나, 실행 시 리전을 정확히 지정해야 합니다.
+      # 하지만 보통 Target ARN을 쓰면 리전은 자동으로 인식됩니다.
+
+  - name: WaitForFailoverCompletion
+    action: aws:waitForAwsResourceProperty
+    timeoutSeconds: 600
+    description: "Failover가 완료될 때까지 대기합니다. Target Cluster가 Writer가 되면 다음 단계로 진행합니다."
+    inputs:
+      Service: rds
+      Api: DescribeGlobalClusters
+      GlobalClusterIdentifier: "{{ GlobalClusterIdentifier }}"
+      PropertySelector: "$.GlobalClusters[0].GlobalClusterMembers[?(@.IsWriter == true)].DBClusterArn"
+      DesiredValues:
+        - "{{ TargetClusterArn }}"
+
+  - name: GetNewPrimaryEndpoint
+    action: aws:executeAwsApi
+    description: "새롭게 Primary가 된 DB 클러스터의 엔드포인트 주소를 조회합니다."
+    inputs:
+      Service: rds
+      Api: DescribeDBClusters
+      DBClusterIdentifier: "{{ TargetClusterArn }}"
+    outputs:
+      - Name: NewEndpoint
+        Selector: "$.DBClusters[0].Endpoint"
+        Type: String
+
+  - name: UpdateSsmParameter
+    action: aws:executeAwsApi
+    description: "조회한 새 엔드포인트 주소를 SSM Parameter Store에 업데이트하여 CI/CD 파이프라인을 트리거합니다."
+    inputs:
+      Service: ssm
+      Api: PutParameter
+      Name: "{{ DbEndpointParameterName }}"
+      Value: "{{ GetNewPrimaryEndpoint.NewEndpoint }}"
+      Type: String
+      Overwrite: true
