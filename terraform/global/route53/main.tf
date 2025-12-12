@@ -45,7 +45,7 @@ data "terraform_remote_state" "tokyo_app" {
   config = {
     bucket         = "diehard-ddos-tf-state-lock"
     key            = "tokyo/03-app/healthcheck-api.tfstate"
-    region         = "ap-northeast-1"
+    region         = "ap-northeast-2"
     dynamodb_table = "terraform-lock-table"
     encrypt        = true
   }
