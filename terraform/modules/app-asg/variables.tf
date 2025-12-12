@@ -83,6 +83,30 @@ variable "app_port" {
   default     = 8080
 }
 
+variable "enable_target_tracking" {
+  description = "ASG 타깃 추적 기반 오토스케일 활성화 여부"
+  type        = bool
+  default     = true
+}
+
+variable "target_cpu_utilization" {
+  description = "타깃 추적용 평균 CPU 사용률 목표(%)"
+  type        = number
+  default     = 60
+}
+
+variable "estimated_instance_warmup" {
+  description = "타깃 추적 정책에서 고려할 인스턴스 워밍업 시간(초)"
+  type        = number
+  default     = 300
+}
+#스트레스 테스트용 테스트 끝나면 false 로 바꾸고 다시 apply
+variable "allow_stress_endpoint" {
+  description = "컨테이너에 ALLOW_STRESS 환경변수를 주입해 /stress 엔드포인트를 활성화할지 여부"
+  type        = bool
+  default     = true
+}
+
 variable "db_host" {
   description = "Aurora 엔드포인트"
   type        = string

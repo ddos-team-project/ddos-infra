@@ -121,6 +121,7 @@ resource "aws_launch_template" "this" {
     db_name            = var.db_name
     db_user            = var.db_user
     ssm_parameter_name = var.ssm_parameter_name
+    allow_stress       = var.allow_stress_endpoint
   }))
 
   network_interfaces {
@@ -172,6 +173,25 @@ resource "aws_autoscaling_group" "this" {
 
   lifecycle {
     create_before_destroy = true
+  }
+}
+
+# 타깃 추적 기반 오토스케일(평균 CPU %)
+resource "aws_autoscaling_policy" "cpu_target_tracking" {
+  count                     = var.enable_target_tracking ? 1 : 0
+  name                      = "${var.name}-cpu-target-tracking"
+  autoscaling_group_name    = aws_autoscaling_group.this.name
+  estimated_instance_warmup = var.estimated_instance_warmup
+
+  policy_type = "TargetTrackingScaling"
+
+  target_tracking_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ASGAverageCPUUtilization"
+    }
+
+    target_value     = var.target_cpu_utilization
+    disable_scale_in = false
   }
 }
 data "aws_ami" "amazon_linux_2023" {

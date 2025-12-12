@@ -6,7 +6,7 @@ locals {
   alb_subnet_ids = data.terraform_remote_state.network.outputs.public_subnets
 
   # TODO: SSM/Secrets Manager로 DB 엔드포인트 주입
-  db_host = "dh-prod-db-seoul-aurora-v2.cluster-clg0eecwg923.ap-northeast-2.rds.amazonaws.com"
+  db_host = try(data.terraform_remote_state.db.outputs.cluster_endpoint, null)
 
   ecr_repository = "dh-prod-t1-ecr-healthcheck-api"
   image_tag      = "dev"
