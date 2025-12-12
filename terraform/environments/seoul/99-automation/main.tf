@@ -5,7 +5,7 @@ module "aurora_automation" {
   environment                        = var.environment
   failover_runbook_content           = file("${path.module}/aurora-failover-runbook.yml")
   failback_runbook_content           = file("${path.module}/aurora-failback-runbook.yml")
-  disaster_failover_runbook_content  = file("${path.module}/aurora-disaster-failover-runbook.yml")
+  disaster_failover_runbook_content  = ""  # Seoul은 Primary이므로 재해 페일오버 불필요
   db_endpoint_parameter_name         = var.db_endpoint_parameter_name
 
   tags = local.common_tags
