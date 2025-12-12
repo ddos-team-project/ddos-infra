@@ -5,6 +5,9 @@ locals {
   app_subnet_ids = data.terraform_remote_state.network.outputs.app_subnets
   alb_subnet_ids = data.terraform_remote_state.network.outputs.public_subnets
 
+  # IDC 설정
+  idc_host_cidr = data.terraform_remote_state.network.outputs.idc_host_cidr
+
   # 헬스체크/읽기 위주이므로 reader 엔드포인트 사용
   db_host = try(data.terraform_remote_state.db.outputs.cluster_reader_endpoint, null)
 

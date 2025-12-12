@@ -5,6 +5,9 @@ locals {
   app_subnet_ids = data.terraform_remote_state.network.outputs.app_subnets
   alb_subnet_ids = data.terraform_remote_state.network.outputs.public_subnets
 
+  # IDC 설정
+  idc_host_cidr = data.terraform_remote_state.network.outputs.idc_host_cidr
+
   # TODO: SSM/Secrets Manager로 DB 엔드포인트 주입
   db_host = try(data.terraform_remote_state.db.outputs.cluster_endpoint, null)
 
