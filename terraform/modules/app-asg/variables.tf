@@ -186,5 +186,5 @@ variable "idc_port" {
 variable "cwagent_ssm_name" {
   description = "SSM parameter name containing CloudWatch Agent config"
   type        = string
-
 }
+
