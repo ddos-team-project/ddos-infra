@@ -13,6 +13,7 @@ sudo systemctl enable --now docker
 # ec2-user docker 그룹 추가
 sudo usermod -aG docker ec2-user
 
+
 # AWS CLI 설치 (필요하면)
 if ! command -v aws &>/dev/null; then
   sudo dnf install -y awscli
@@ -31,7 +32,7 @@ docker pull ${image_uri_full}
 
 # 👇 [중요] SSM Parameter Store에서 DB 비밀번호 조회 (KMS 복호화 포함)
 DB_PASSWORD=$(aws ssm get-parameter \
-  --name "${db_password_ssm_path}" \
+  --name "${ssm_parameter_name}" \
   --with-decryption \
   --query "Parameter.Value" \
   --output text \
@@ -54,17 +55,17 @@ docker run -d \
   -e IDC_HOST="${idc_host}" \
   -e IDC_PORT="${idc_port}" \
   ${image_uri_full}
-
-# CloudWatch Agent 설치 및 설정 적용
+#CloudWatch Agent 설치
 sudo dnf install -y amazon-cloudwatch-agent
 sudo mkdir -p /opt/aws/amazon-cloudwatch-agent/etc
-aws ssm get-parameter \
-  --name "${cwagent_ssm_name}" \
+sudo sh -c "aws ssm get-parameter \
+  --name '${cwagent_ssm_name}' \
   --with-decryption \
-  --query "Parameter.Value" \
+  --query 'Parameter.Value' \
   --output text \
   --region ${aws_region} \
-  | sudo tee /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json >/dev/null
+  > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json"
+
 
 sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
   -a fetch-config -m ec2 \
