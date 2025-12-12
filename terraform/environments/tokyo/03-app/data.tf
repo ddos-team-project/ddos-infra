@@ -1,4 +1,4 @@
-# 01-network remote_state for VPC/Subnets
+# 01-network remote_state for VPC / Subnets
 data "terraform_remote_state" "network" {
   backend = "s3"
   config = {

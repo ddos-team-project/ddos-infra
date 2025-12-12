@@ -13,6 +13,7 @@ module "healthcheck_api_alb" {
   vpc_id            = local.vpc_id
   alb_subnet_ids    = local.alb_subnet_ids
   alb_sg_ids        = [aws_security_group.alb_tokyo_t1.id]
+
   app_port          = 8080
   health_check_path = "/health"
   certificate_arn   = module.tier1_acm_certificate.certificate_arn
