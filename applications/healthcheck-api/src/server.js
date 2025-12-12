@@ -2,11 +2,11 @@ const express = require('express');
 const mysql = require('mysql2/promise');
 const app = express();
 
-// 환경변수에 포트 번호가 있으면 해당 포트를 사용 (없으면 기본 포트 3000)
 const PORT = process.env.PORT || 3000;
 
 // 서비스 메타 정보
 const SERVICE_NAME = process.env.SERVICE_NAME || 'ddos-noncore-api';
+const REGION = process.env.REGION || 'local';
 const APP_ENV = process.env.APP_ENV || 'dev';
 
 // Aurora 연결 정보 (컨테이너 환경변수로 주입)
@@ -44,22 +44,22 @@ async function checkDbHealth() {
   }
 }
 
-// /health 엔드포인트 (DB 상태 포함)
+// /health 엔드포인트(DB 상태 포함)
 app.get('/health', async (req, res) => {
-  const dbStatus = await checkDbHealth(); // DB 상태도 함께 확인
+  const dbStatus = await checkDbHealth();
 
   res.json({
-    status,
+    status: dbStatus.status === 'ok' ? 'ok' : 'degraded',
     service: SERVICE_NAME,
+    region: REGION,
     env: APP_ENV,
-    location,
     db: dbStatus,
     uptimeMs: Math.round(process.uptime() * 1000),
     timestamp: new Date().toISOString(),
   });
 });
 
-// DB를 거치지 않는 가벼운 핑 엔드포인트 (트래픽/라우팅 테스트용)
+// DB를 거치지 않는 가벼운 핑 엔드포인트(트래픽/라우팅 테스트용)
 app.get('/ping', (req, res) => {
   res.json({
     status: 'ok',
@@ -101,7 +101,6 @@ app.get('/stress', (req, res) => {
   });
 });
 
-// 서버 동작
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
