@@ -182,8 +182,9 @@ variable "idc_port" {
   type        = number
   default     = 3000
 }
+
 variable "cwagent_ssm_name" {
   description = "SSM parameter name containing CloudWatch Agent config"
   type        = string
-
 }
+
