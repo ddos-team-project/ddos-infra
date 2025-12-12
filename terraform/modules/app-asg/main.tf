@@ -73,25 +73,27 @@ resource "aws_iam_instance_profile" "ec2_profile" {
 data "template_file" "user_data" {
   template = file("${path.module}/user-data.tpl")
   vars = {
-    aws_region           = var.aws_region
-    image_uri_registry   = split("/", var.image_uri)[0]
-    image_uri_full       = var.image_uri
-    app_port             = var.app_port
-    container_port       = var.container_port
-    service_name         = var.service_name
-    region_label         = var.region_label
-    app_env              = var.app_env
-    db_host              = var.db_host
-    db_port              = var.db_port
-    db_name              = var.db_name
-    db_user              = var.db_user
-    allow_stress         = var.allow_stress_endpoint
+    aws_region         = var.aws_region
+    image_uri_registry = split("/", var.image_uri)[0]
+    image_uri_full     = var.image_uri
+    app_port           = var.app_port
+    container_port     = var.container_port
+    service_name       = var.service_name
+    region_label       = var.region_label
+    app_env            = var.app_env
+    db_host            = var.db_host
+    db_port            = var.db_port
+    db_name            = var.db_name
+    db_user            = var.db_user
+    allow_stress       = var.allow_stress_endpoint
+
     idc_host             = var.idc_host
     idc_port             = var.idc_port
     cwagent_ssm_name     = var.cwagent_ssm_name
     db_password_ssm_path = var.db_password_ssm_path
   }
 }
+
 
 resource "aws_launch_template" "this" {
   name_prefix   = "${var.name}-lt-v2-"
