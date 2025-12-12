@@ -1,0 +1,153 @@
+description: "[Failback 2/6] Seoul 리전에서 실행 - Seoul 리전 복구 상태 확인 (Tokyo Pre-Failback 완료 후 실행)"
+schemaVersion: "0.3"
+assumeRole: "{{ AutomationAssumeRole }}"
+
+parameters:
+  SeoulRegion:
+    type: String
+    description: "(필수) Seoul 리전"
+    default: "ap-northeast-2"
+  SeoulVpcId:
+    type: String
+    description: "(필수) Seoul VPC ID"
+    default: ""
+  SeoulSubnetIds:
+    type: StringList
+    description: "(필수) Seoul DB Subnet IDs (쉼표로 구분)"
+    default: []
+  TokyoSnapshotId:
+    type: String
+    description: "(필수) Tokyo에서 생성한 스냅샷 ID (disaster-recovery-prepare-failback 출력값)"
+    default: ""
+  TokyoEngineVersion:
+    type: String
+    description: "(필수) Tokyo 엔진 버전 (disaster-recovery-prepare-failback 출력값)"
+    default: "8.0.mysql_aurora.3.04.0"
+  IncidentNumber:
+    type: String
+    description: "(필수) 장애 관리 번호"
+    default: ""
+  AutomationAssumeRole:
+    type: String
+    description: "(선택) Automation 실행 IAM Role ARN"
+    default: ""
+
+mainSteps:
+  - name: LogVerifyStart
+    action: aws:executeAwsApi
+    description: "복구 검증 시작 기록"
+    inputs:
+      Service: cloudwatch
+      Api: PutMetricData
+      Namespace: "Aurora/DisasterRecovery"
+      MetricData:
+        - MetricName: "FailbackVerifyStarted"
+          Value: 1
+          Unit: "Count"
+          Dimensions:
+            - Name: "Phase"
+              Value: "Verify"
+            - Name: "IncidentNumber"
+              Value: "{{ IncidentNumber }}"
+
+  - name: VerifySeoulVpcAvailability
+    action: aws:executeAwsApi
+    description: "Seoul VPC 가용성 확인"
+    inputs:
+      Service: ec2
+      Api: DescribeVpcs
+      VpcIds:
+        - "{{ SeoulVpcId }}"
+    outputs:
+      - Name: VpcState
+        Selector: "$.Vpcs[0].State"
+        Type: String
+      - Name: VpcCidr
+        Selector: "$.Vpcs[0].CidrBlock"
+        Type: String
+
+  - name: VerifySeoulSubnets
+    action: aws:executeAwsApi
+    description: "Seoul DB Subnet 가용성 확인"
+    inputs:
+      Service: ec2
+      Api: DescribeSubnets
+      SubnetIds: "{{ SeoulSubnetIds }}"
+    outputs:
+      - Name: FirstSubnetId
+        Selector: "$.Subnets[0].SubnetId"
+        Type: String
+
+  - name: CheckSeoulRdsAvailability
+    action: aws:executeAwsApi
+    description: "Seoul 리전 RDS 서비스 가용성 확인"
+    inputs:
+      Service: rds
+      Api: DescribeDBClusters
+      MaxRecords: 1
+
+  - name: VerifySeoulKmsKey
+    action: aws:executeAwsApi
+    description: "Seoul KMS 키 가용성 확인"
+    inputs:
+      Service: kms
+      Api: ListKeys
+      Limit: 10
+
+  - name: CheckGlobalClusterExistence
+    action: aws:executeAwsApi
+    description: "Global Cluster 재생성 확인"
+    inputs:
+      Service: rds
+      Api: DescribeGlobalClusters
+      GlobalClusterIdentifier: "dh-prod-global-rds-v2"
+    outputs:
+      - Name: GlobalClusterStatus
+        Selector: "$.GlobalClusters[0].Status"
+        Type: String
+
+  - name: VerifySnapshotParameter
+    action: aws:executeAwsApi
+    description: "Tokyo 스냅샷 ID 파라미터 검증"
+    inputs:
+      Service: ssm
+      Api: PutParameter
+      Name: "/ddos/aurora/disaster-recovery/verified-snapshot"
+      Value: "{{ TokyoSnapshotId }}"
+      Type: "String"
+      Overwrite: true
+      Description: "Verified Tokyo snapshot for Seoul restore"
+
+  - name: LogVerifyComplete
+    action: aws:executeAwsApi
+    description: "복구 검증 완료 기록"
+    inputs:
+      Service: cloudwatch
+      Api: PutMetricData
+      Namespace: "Aurora/DisasterRecovery"
+      MetricData:
+        - MetricName: "FailbackVerifyCompleted"
+          Value: 1
+          Unit: "Count"
+          Dimensions:
+            - Name: "Phase"
+              Value: "Verify"
+            - Name: "IncidentNumber"
+              Value: "{{ IncidentNumber }}"
+
+  - name: CreateVerificationAudit
+    action: aws:executeAwsApi
+    description: "검증 결과 감사 로그 생성"
+    inputs:
+      Service: ssm
+      Api: PutParameter
+      Name: "/ddos/aurora/disaster-recovery/failback-verify-{{ global:DATE }}"
+      Value: "Incident: {{ IncidentNumber }}, Seoul VPC: {{ VerifySeoulVpcAvailability.VpcState }}, Global Cluster: {{ CheckGlobalClusterExistence.GlobalClusterStatus }}, Snapshot: {{ TokyoSnapshotId }}, Engine: {{ TokyoEngineVersion }}"
+      Type: "String"
+      Overwrite: true
+      Description: "Failback Verification Audit - Seoul Recovery Check"
+
+outputs:
+  - VerifySeoulVpcAvailability.VpcState
+  - VerifySeoulVpcAvailability.VpcCidr
+  - CheckGlobalClusterExistence.GlobalClusterStatus
