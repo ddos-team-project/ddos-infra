@@ -58,13 +58,13 @@ docker run -d \
 #CloudWatch Agent 설치
 sudo dnf install -y amazon-cloudwatch-agent
 sudo mkdir -p /opt/aws/amazon-cloudwatch-agent/etc
-sudo sh -c "aws ssm get-parameter \
-  --name '${cwagent_ssm_name}' \
+aws ssm get-parameter \
+  --name "/prod/ddos/t1/seoul/cloudwatch/config" \
   --with-decryption \
-  --query 'Parameter.Value' \
+  --region ap-northeast-2 \
+  --query "Parameter.Value" \
   --output text \
-  --region ${aws_region} \
-  > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json"
+  | sudo tee /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json >/dev/null
 
 
 sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
