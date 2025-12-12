@@ -75,3 +75,9 @@ variable "owner" {
   type        = string
   default     = "devops"
 }
+
+variable "alarm_topic_arn" {
+  description = "SNS topic ARN for CloudWatch alarms"
+  type        = string
+  default     = null
+}
