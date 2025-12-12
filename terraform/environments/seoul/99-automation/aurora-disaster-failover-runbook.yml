@@ -23,6 +23,13 @@ parameters:
     type: String
     description: "(필수) DB 엔드포인트 주소를 저장할 SSM Parameter의 이름."
     default: "/ddos/aurora/cluster_endpoint"
+  SkipSnapshot:
+    type: String
+    description: "(선택) 스냅샷 생성 건너뛰기 - 긴급 페일오버 시 true로 설정하여 시간 단축"
+    default: "false"
+    allowedValues:
+      - "true"
+      - "false"
   AutomationAssumeRole:
     type: String
     description: "(선택) Automation을 실행할 IAM 역할의 ARN."
@@ -42,6 +49,21 @@ mainSteps:
         Selector: "$.GlobalClusters[0].Status"
         Type: String
 
+  - name: VerifyLocalClusterHealth
+    action: aws:executeAwsApi
+    description: "Seoul 클러스터 정상 작동 확인 및 ARN 조회"
+    inputs:
+      Service: rds
+      Api: DescribeDBClusters
+      DBClusterIdentifier: "{{ LocalClusterIdentifier }}"
+    outputs:
+      - Name: LocalClusterArn
+        Selector: "$.DBClusters[0].DBClusterArn"
+        Type: String
+      - Name: LocalClusterStatus
+        Selector: "$.DBClusters[0].Status"
+        Type: String
+
   - name: DetachLocalCluster
     action: aws:executeAwsApi
     description: "Seoul 클러스터를 Global Cluster에서 분리하여 독립 클러스터로 유지합니다."
@@ -50,7 +72,7 @@ mainSteps:
       Service: rds
       Api: RemoveFromGlobalCluster
       GlobalClusterIdentifier: "{{ GlobalClusterIdentifier }}"
-      DbClusterIdentifier: "{{ LocalClusterIdentifier }}"
+      DbClusterIdentifier: "{{ VerifyLocalClusterHealth.LocalClusterArn }}"
 
   - name: WaitForClusterAvailable
     action: aws:waitForAwsResourceProperty
