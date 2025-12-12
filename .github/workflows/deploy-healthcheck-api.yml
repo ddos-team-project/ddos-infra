@@ -13,11 +13,9 @@ on:
   workflow_dispatch:
 
 env:
-  AWS_REGION: ap-northeast-2
   ECR_REPOSITORY: dh-prod-t1-ecr-healthcheck-api
   IMAGE_TAG: dev
   APP_DIR: applications/healthcheck-api
-  ASG_NAME: healthcheck-api-seoul-asg
 
 jobs:
   build-test:
@@ -36,6 +34,16 @@ jobs:
   deploy:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - region: ap-northeast-2
+            asg: healthcheck-api-seoul-asg
+          - region: ap-northeast-1
+            asg: healthcheck-api-tokyo-asg
+    env:
+      AWS_REGION: ${{ matrix.region }}
+      ASG_NAME: ${{ matrix.asg }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -45,7 +53,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ matrix.region }}
 
       - name: Login to Amazon ECR
         id: login-ecr
