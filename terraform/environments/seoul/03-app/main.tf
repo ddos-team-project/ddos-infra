@@ -19,34 +19,32 @@ module "healthcheck_api_alb" {
   tags              = local.tags
 }
 
+module "cw_logs" {
+  source = "../../../modules/cloudwatch/log-group"
+
+  project = var.project
+  env     = var.env
+  region  = var.region
+  tier    = var.tier
+  services = [
+    var.service_name
+  ]
+
+  retention_in_days = var.retention_in_days
+}
+
 module "healthcheck_api_asg" {
   source = "../../../modules/app-asg"
 
   name           = local.name_prefix
   vpc_id         = local.vpc_id
   app_subnet_ids = local.app_subnet_ids
-
-  app_sg_ids = [aws_security_group.app_seoul_t1.id]
-
+  app_sg_ids     = [aws_security_group.app_seoul_t1.id]
   app_port       = 8080
   container_port = 3000
 
-
   image_uri  = local.image_uri
   aws_region = "ap-northeast-2"
-  db_host            = local.db_host
-  db_name            = "ddos_noncore"
-  db_user            = "admin"
-  ssm_parameter_name = "/ddos/aurora/password"
-
-  cwagent_ssm_name = local.cwagent_ssm_path
-
-  #Metadata for log templating
-  env     = "prod"
-  project = "ddos"
-  tier    = "t1"
-  region  = "seoul"
-
 
   service_name = "ddos-healthcheck-api"
   region_label = "seoul"
@@ -56,8 +54,10 @@ module "healthcheck_api_asg" {
   db_name            = "ddos_noncore"
   db_user            = "admin"
   ssm_parameter_name = "/ddos/aurora/password"
+  cwagent_ssm_name   = "/prod/ddos/t1/seoul/cloudwatch/config"
 
   target_group_arns = [module.healthcheck_api_alb.target_group_arn]
 
   tags = local.tags
 }
+
