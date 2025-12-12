@@ -169,3 +169,15 @@ variable "app_sg_ids" {
   type        = list(string)
   default     = []
 }
+
+variable "idc_host" {
+  description = "IDC 서버 IP (VPN 연결용)"
+  type        = string
+  default     = "192.168.0.10"
+}
+
+variable "idc_port" {
+  description = "IDC 서버 포트"
+  type        = number
+  default     = 3000
+}
