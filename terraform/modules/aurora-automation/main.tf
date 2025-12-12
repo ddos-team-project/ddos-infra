@@ -36,51 +36,16 @@ resource "aws_iam_policy" "ssm_automation_policy" {
         Action = [
           "rds:FailoverGlobalCluster",
           "rds:RemoveFromGlobalCluster",
-          "rds:CreateGlobalCluster",
           "rds:DescribeGlobalClusters",
-          "rds:DescribeDBClusters",
-          "rds:DescribeDBInstances",
-          "rds:DescribeDBClusterSnapshots",
-          "rds:ModifyDBCluster",
-          "rds:CreateDBClusterSnapshot",
-          "rds:CreateDBInstance",
-          "rds:RestoreDBClusterFromSnapshot"
+          "rds:DescribeDBClusters"
         ],
         Resource = "*"
       },
-      # SSM Parameter 권한
+      # SSM Parameter 수정 권한
       {
         Effect   = "Allow",
-        Action   = ["ssm:PutParameter", "ssm:GetParameter"],
-        Resource = "arn:aws:ssm:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:parameter/ddos/aurora/*"
-      },
-      # CloudWatch 권한
-      {
-        Effect = "Allow",
-        Action = [
-          "cloudwatch:PutMetricData",
-          "cloudwatch:PutMetricAlarm",
-          "cloudwatch:GetMetricStatistics"
-        ],
-        Resource = "*"
-      },
-      # EC2 권한 (VPC/Subnet 확인)
-      {
-        Effect = "Allow",
-        Action = [
-          "ec2:DescribeVpcs",
-          "ec2:DescribeSubnets"
-        ],
-        Resource = "*"
-      },
-      # KMS 권한
-      {
-        Effect = "Allow",
-        Action = [
-          "kms:ListKeys",
-          "kms:DescribeKey"
-        ],
-        Resource = "*"
+        Action   = "ssm:PutParameter",
+        Resource = "arn:aws:ssm:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:parameter${var.db_endpoint_parameter_name}"
       }
     ]
   })
@@ -123,82 +88,6 @@ resource "aws_ssm_document" "aurora_disaster_failover_runbook" {
   document_format = "YAML"
 
   content = var.disaster_failover_runbook_content
-
-  tags = var.tags
-}
-
-# ===== Seoul Disaster Recovery Failback Runbooks =====
-
-# SSM Automation Document - Disaster Recovery Step 1: Verify (Seoul)
-resource "aws_ssm_document" "disaster_recovery_verify" {
-  count           = var.disaster_recovery_verify_content != "" ? 1 : 0
-  name            = "Aurora-Disaster-Recovery-1-Verify-${var.region_name}"
-  document_type   = "Automation"
-  document_format = "YAML"
-
-  content = var.disaster_recovery_verify_content
-
-  tags = var.tags
-}
-
-# SSM Automation Document - Disaster Recovery Step 2: Create Cluster (Seoul)
-resource "aws_ssm_document" "disaster_recovery_create_cluster" {
-  count           = var.disaster_recovery_create_cluster_content != "" ? 1 : 0
-  name            = "Aurora-Disaster-Recovery-2-CreateCluster-${var.region_name}"
-  document_type   = "Automation"
-  document_format = "YAML"
-
-  content = var.disaster_recovery_create_cluster_content
-
-  tags = var.tags
-}
-
-# SSM Automation Document - Disaster Recovery Step 3: Add Secondary (Seoul)
-resource "aws_ssm_document" "disaster_recovery_add_secondary" {
-  count           = var.disaster_recovery_add_secondary_content != "" ? 1 : 0
-  name            = "Aurora-Disaster-Recovery-3-AddSecondary-${var.region_name}"
-  document_type   = "Automation"
-  document_format = "YAML"
-
-  content = var.disaster_recovery_add_secondary_content
-
-  tags = var.tags
-}
-
-# SSM Automation Document - Disaster Recovery Step 4: Verify Replication (Seoul)
-resource "aws_ssm_document" "disaster_recovery_verify_replication" {
-  count           = var.disaster_recovery_verify_replication_content != "" ? 1 : 0
-  name            = "Aurora-Disaster-Recovery-4-VerifyReplication-${var.region_name}"
-  document_type   = "Automation"
-  document_format = "YAML"
-
-  content = var.disaster_recovery_verify_replication_content
-
-  tags = var.tags
-}
-
-# ===== Tokyo Disaster Recovery Failback Runbooks =====
-
-# SSM Automation Document - Disaster Recovery Prepare Failback (Tokyo)
-resource "aws_ssm_document" "disaster_recovery_prepare_failback" {
-  count           = var.disaster_recovery_prepare_failback_content != "" ? 1 : 0
-  name            = "Aurora-Disaster-Recovery-Prepare-Failback-${var.region_name}"
-  document_type   = "Automation"
-  document_format = "YAML"
-
-  content = var.disaster_recovery_prepare_failback_content
-
-  tags = var.tags
-}
-
-# SSM Automation Document - Disaster Recovery Recreate Global (Tokyo)
-resource "aws_ssm_document" "disaster_recovery_recreate_global" {
-  count           = var.disaster_recovery_recreate_global_content != "" ? 1 : 0
-  name            = "Aurora-Disaster-Recovery-Recreate-Global-${var.region_name}"
-  document_type   = "Automation"
-  document_format = "YAML"
-
-  content = var.disaster_recovery_recreate_global_content
 
   tags = var.tags
 }
