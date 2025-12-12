@@ -64,7 +64,7 @@ aws ssm get-parameter \
   --query "Parameter.Value" \
   --output text \
   --region ${aws_region} \
-  > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+  | sudo tee /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json >/dev/null
 
 
 sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
