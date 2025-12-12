@@ -1,0 +1,168 @@
+description: "[Failback 1/6] Tokyo 리전에서 실행 - Global Cluster 재생성 및 Tokyo Primary 추가"
+schemaVersion: "0.3"
+assumeRole: "{{ AutomationAssumeRole }}"
+
+parameters:
+  GlobalClusterIdentifier:
+    type: String
+    description: "(필수) 재생성할 Global Cluster ID"
+    default: "dh-prod-global-rds-v2"
+  TokyoClusterIdentifier:
+    type: String
+    description: "(필수) Tokyo 클러스터 ID (Primary가 될 클러스터)"
+    default: "dh-prod-db-tokyo-aurora-secondary-v2"
+  Engine:
+    type: String
+    description: "(필수) Aurora 엔진"
+    default: "aurora-mysql"
+  EngineVersion:
+    type: String
+    description: "(필수) Aurora 엔진 버전"
+    default: "8.0.mysql_aurora.3.04.0"
+  IncidentNumber:
+    type: String
+    description: "(필수) 장애 관리 번호"
+    default: ""
+  AutomationAssumeRole:
+    type: String
+    description: "(선택) Automation 실행 IAM Role ARN"
+    default: ""
+
+mainSteps:
+  - name: LogRecreateStart
+    action: aws:executeAwsApi
+    description: "Global Cluster 재생성 시작 기록"
+    inputs:
+      Service: cloudwatch
+      Api: PutMetricData
+      Namespace: "Aurora/DisasterRecovery"
+      MetricData:
+        - MetricName: "FailbackRecreateGlobalStarted"
+          Value: 1
+          Unit: "Count"
+          Dimensions:
+            - Name: "Phase"
+              Value: "RecreateGlobal"
+            - Name: "IncidentNumber"
+              Value: "{{ IncidentNumber }}"
+
+  - name: VerifyTokyoClusterReady
+    action: aws:executeAwsApi
+    description: "Tokyo 클러스터 준비 상태 확인"
+    inputs:
+      Service: rds
+      Api: DescribeDBClusters
+      DBClusterIdentifier: "{{ TokyoClusterIdentifier }}"
+    outputs:
+      - Name: ClusterStatus
+        Selector: "$.DBClusters[0].Status"
+        Type: String
+      - Name: ClusterArn
+        Selector: "$.DBClusters[0].DBClusterArn"
+        Type: String
+      - Name: ClusterEndpoint
+        Selector: "$.DBClusters[0].Endpoint"
+        Type: String
+
+  - name: CheckExistingGlobalCluster
+    action: aws:executeAwsApi
+    description: "기존 Global Cluster 존재 여부 확인"
+    onFailure: Continue
+    inputs:
+      Service: rds
+      Api: DescribeGlobalClusters
+      GlobalClusterIdentifier: "{{ GlobalClusterIdentifier }}"
+    outputs:
+      - Name: GlobalClusterStatus
+        Selector: "$.GlobalClusters[0].Status"
+        Type: String
+
+  - name: CreateGlobalCluster
+    action: aws:executeAwsApi
+    description: "Global Cluster 재생성 (Tokyo Primary로)"
+    inputs:
+      Service: rds
+      Api: CreateGlobalCluster
+      GlobalClusterIdentifier: "{{ GlobalClusterIdentifier }}"
+      SourceDBClusterIdentifier: "{{ VerifyTokyoClusterReady.ClusterArn }}"
+      DeletionProtection: false
+    outputs:
+      - Name: GlobalClusterArn
+        Selector: "$.GlobalCluster.GlobalClusterArn"
+        Type: String
+      - Name: GlobalClusterResourceId
+        Selector: "$.GlobalCluster.GlobalClusterResourceId"
+        Type: String
+
+  - name: WaitForGlobalClusterAvailable
+    action: aws:waitForAwsResourceProperty
+    description: "Global Cluster available 상태 대기 (Tokyo Primary 포함)"
+    timeoutSeconds: 1800
+    inputs:
+      Service: rds
+      Api: DescribeGlobalClusters
+      GlobalClusterIdentifier: "{{ GlobalClusterIdentifier }}"
+      PropertySelector: "$.GlobalClusters[0].Status"
+      DesiredValues:
+        - "available"
+
+  - name: VerifyGlobalClusterSetup
+    action: aws:executeAwsApi
+    description: "Global Cluster 구성 확인"
+    inputs:
+      Service: rds
+      Api: DescribeGlobalClusters
+      GlobalClusterIdentifier: "{{ GlobalClusterIdentifier }}"
+    outputs:
+      - Name: GlobalClusterStatus
+        Selector: "$.GlobalClusters[0].Status"
+        Type: String
+      - Name: GlobalClusterArn
+        Selector: "$.GlobalClusters[0].GlobalClusterArn"
+        Type: String
+
+  - name: StoreGlobalClusterInfo
+    action: aws:executeAwsApi
+    description: "Global Cluster 정보 SSM 저장 (서울에서 참조)"
+    inputs:
+      Service: ssm
+      Api: PutParameter
+      Name: "/ddos/aurora/disaster-recovery/global-cluster-info"
+      Value: "GlobalClusterArn={{ VerifyGlobalClusterSetup.GlobalClusterArn }},PrimaryCluster={{ VerifyTokyoClusterReady.ClusterArn }},Status={{ VerifyGlobalClusterSetup.GlobalClusterStatus }}"
+      Type: "String"
+      Overwrite: true
+      Description: "Global Cluster info for Seoul failback (Incident: {{ IncidentNumber }})"
+
+  - name: LogRecreateComplete
+    action: aws:executeAwsApi
+    description: "Global Cluster 재생성 완료 기록"
+    inputs:
+      Service: cloudwatch
+      Api: PutMetricData
+      Namespace: "Aurora/DisasterRecovery"
+      MetricData:
+        - MetricName: "FailbackRecreateGlobalCompleted"
+          Value: 1
+          Unit: "Count"
+          Dimensions:
+            - Name: "Phase"
+              Value: "RecreateGlobal"
+            - Name: "IncidentNumber"
+              Value: "{{ IncidentNumber }}"
+
+  - name: CreateRecreateAudit
+    action: aws:executeAwsApi
+    description: "재생성 감사 로그"
+    inputs:
+      Service: ssm
+      Api: PutParameter
+      Name: "/ddos/aurora/disaster-recovery/recreate-global-{{ global:DATE }}"
+      Value: "Incident: {{ IncidentNumber }}, Global Cluster: {{ GlobalClusterIdentifier }}, Primary: Tokyo ({{ TokyoClusterIdentifier }}), Status: Ready for Seoul Secondary, Time: {{ global:DATE_TIME }}"
+      Type: "String"
+      Overwrite: true
+      Description: "Global Cluster Recreate Audit - Tokyo"
+
+outputs:
+  - CreateGlobalCluster.GlobalClusterArn
+  - VerifyGlobalClusterSetup.GlobalClusterStatus
+  - VerifyTokyoClusterReady.ClusterArn

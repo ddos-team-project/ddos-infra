@@ -1,0 +1,200 @@
+description: "[Failback 3/6] Seoul 리전에서 실행 - Tokyo 스냅샷에서 Seoul 클러스터 복원"
+schemaVersion: "0.3"
+assumeRole: "{{ AutomationAssumeRole }}"
+
+parameters:
+  SeoulRegion:
+    type: String
+    description: "(필수) Seoul 리전"
+    default: "ap-northeast-2"
+  SeoulClusterIdentifier:
+    type: String
+    description: "(필수) 생성할 Seoul 클러스터 ID"
+    default: "dh-prod-db-seoul-aurora-recovered"
+  TokyoSnapshotIdentifier:
+    type: String
+    description: "(필수) 복구에 사용할 Tokyo 스냅샷 ID (disaster-recovery-prepare-failback 출력값)"
+    default: ""
+  SeoulDbSubnetGroupName:
+    type: String
+    description: "(필수) Seoul DB Subnet Group 이름"
+    default: ""
+  SeoulVpcSecurityGroupIds:
+    type: StringList
+    description: "(필수) Seoul VPC Security Group IDs"
+    default: []
+  SeoulKmsKeyId:
+    type: String
+    description: "(필수) Seoul KMS Key ID"
+    default: ""
+  Engine:
+    type: String
+    description: "(필수) Aurora 엔진"
+    default: "aurora-mysql"
+  EngineVersion:
+    type: String
+    description: "(필수) Aurora 엔진 버전"
+    default: "8.0.mysql_aurora.3.04.0"
+  InstanceClass:
+    type: String
+    description: "(필수) DB 인스턴스 클래스"
+    default: "db.r6g.large"
+  IncidentNumber:
+    type: String
+    description: "(필수) 장애 관리 번호"
+    default: ""
+  AutomationAssumeRole:
+    type: String
+    description: "(선택) Automation 실행 IAM Role ARN"
+    default: ""
+
+mainSteps:
+  - name: LogCreateClusterStart
+    action: aws:executeAwsApi
+    description: "클러스터 생성 시작 기록"
+    inputs:
+      Service: cloudwatch
+      Api: PutMetricData
+      Namespace: "Aurora/DisasterRecovery"
+      MetricData:
+        - MetricName: "FailbackCreateClusterStarted"
+          Value: 1
+          Unit: "Count"
+          Dimensions:
+            - Name: "Phase"
+              Value: "CreateCluster"
+            - Name: "IncidentNumber"
+              Value: "{{ IncidentNumber }}"
+
+  - name: RestoreClusterFromSnapshot
+    action: aws:executeAwsApi
+    description: "스냅샷에서 Seoul 클러스터 복원"
+    inputs:
+      Service: rds
+      Api: RestoreDBClusterFromSnapshot
+      DBClusterIdentifier: "{{ SeoulClusterIdentifier }}"
+      SnapshotIdentifier: "{{ TokyoSnapshotIdentifier }}"
+      Engine: "{{ Engine }}"
+      EngineVersion: "{{ EngineVersion }}"
+      DBSubnetGroupName: "{{ SeoulDbSubnetGroupName }}"
+      VpcSecurityGroupIds: "{{ SeoulVpcSecurityGroupIds }}"
+      KmsKeyId: "{{ SeoulKmsKeyId }}"
+      StorageEncrypted: true
+      DeletionProtection: false
+    outputs:
+      - Name: ClusterArn
+        Selector: "$.DBCluster.DBClusterArn"
+        Type: String
+
+  - name: WaitForClusterAvailable
+    action: aws:waitForAwsResourceProperty
+    description: "Seoul 클러스터 available 상태 대기"
+    timeoutSeconds: 3600
+    inputs:
+      Service: rds
+      Api: DescribeDBClusters
+      DBClusterIdentifier: "{{ SeoulClusterIdentifier }}"
+      PropertySelector: "$.DBClusters[0].Status"
+      DesiredValues:
+        - "available"
+
+  - name: CreateWriterInstance
+    action: aws:executeAwsApi
+    description: "Seoul 클러스터에 Writer 인스턴스 생성"
+    inputs:
+      Service: rds
+      Api: CreateDBInstance
+      DBInstanceIdentifier: "{{ SeoulClusterIdentifier }}-writer"
+      DBInstanceClass: "{{ InstanceClass }}"
+      Engine: "{{ Engine }}"
+      DBClusterIdentifier: "{{ SeoulClusterIdentifier }}"
+      PubliclyAccessible: false
+
+  - name: WaitForWriterAvailable
+    action: aws:waitForAwsResourceProperty
+    description: "Writer 인스턴스 available 상태 대기"
+    timeoutSeconds: 1800
+    inputs:
+      Service: rds
+      Api: DescribeDBInstances
+      DBInstanceIdentifier: "{{ SeoulClusterIdentifier }}-writer"
+      PropertySelector: "$.DBInstances[0].DBInstanceStatus"
+      DesiredValues:
+        - "available"
+
+  - name: CreateReaderInstance
+    action: aws:executeAwsApi
+    description: "Seoul 클러스터에 Reader 인스턴스 생성"
+    inputs:
+      Service: rds
+      Api: CreateDBInstance
+      DBInstanceIdentifier: "{{ SeoulClusterIdentifier }}-reader"
+      DBInstanceClass: "{{ InstanceClass }}"
+      Engine: "{{ Engine }}"
+      DBClusterIdentifier: "{{ SeoulClusterIdentifier }}"
+      PubliclyAccessible: false
+
+  - name: WaitForReaderAvailable
+    action: aws:waitForAwsResourceProperty
+    description: "Reader 인스턴스 available 상태 대기"
+    timeoutSeconds: 1800
+    inputs:
+      Service: rds
+      Api: DescribeDBInstances
+      DBInstanceIdentifier: "{{ SeoulClusterIdentifier }}-reader"
+      PropertySelector: "$.DBInstances[0].DBInstanceStatus"
+      DesiredValues:
+        - "available"
+
+  - name: VerifyClusterHealth
+    action: aws:executeAwsApi
+    description: "Seoul 클러스터 상태 최종 확인"
+    inputs:
+      Service: rds
+      Api: DescribeDBClusters
+      DBClusterIdentifier: "{{ SeoulClusterIdentifier }}"
+    outputs:
+      - Name: ClusterStatus
+        Selector: "$.DBClusters[0].Status"
+        Type: String
+      - Name: ClusterEndpoint
+        Selector: "$.DBClusters[0].Endpoint"
+        Type: String
+      - Name: ClusterArn
+        Selector: "$.DBClusters[0].DBClusterArn"
+        Type: String
+
+  - name: LogCreateClusterComplete
+    action: aws:executeAwsApi
+    description: "클러스터 생성 완료 기록"
+    inputs:
+      Service: cloudwatch
+      Api: PutMetricData
+      Namespace: "Aurora/DisasterRecovery"
+      MetricData:
+        - MetricName: "FailbackCreateClusterCompleted"
+          Value: 1
+          Unit: "Count"
+          Dimensions:
+            - Name: "Phase"
+              Value: "CreateCluster"
+            - Name: "IncidentNumber"
+              Value: "{{ IncidentNumber }}"
+
+  - name: CreateClusterAudit
+    action: aws:executeAwsApi
+    description: "클러스터 생성 감사 로그"
+    inputs:
+      Service: ssm
+      Api: PutParameter
+      Name: "/ddos/aurora/disaster-recovery/failback-create-{{ global:DATE }}"
+      Value: "Seoul Cluster Created: {{ SeoulClusterIdentifier }}, ARN: {{ VerifyClusterHealth.ClusterArn }}, From Snapshot: {{ TokyoSnapshotIdentifier }}, Status: {{ VerifyClusterHealth.ClusterStatus }}"
+      Type: "String"
+      Overwrite: true
+      Description: "Failback Create Cluster Audit - Seoul"
+
+outputs:
+  - RestoreClusterFromSnapshot.ClusterArn
+  - VerifyClusterHealth.ClusterStatus
+  - VerifyClusterHealth.ClusterEndpoint
+  - VerifyClusterHealth.ClusterArn

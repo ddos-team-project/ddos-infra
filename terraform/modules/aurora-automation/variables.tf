@@ -35,3 +35,39 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "disaster_recovery_verify_content" {
+  description = "Content of disaster recovery step 1: verify runbook (Seoul)"
+  type        = string
+  default     = ""
+}
+
+variable "disaster_recovery_create_cluster_content" {
+  description = "Content of disaster recovery step 2: create cluster runbook (Seoul)"
+  type        = string
+  default     = ""
+}
+
+variable "disaster_recovery_add_secondary_content" {
+  description = "Content of disaster recovery step 3: add secondary runbook (Seoul)"
+  type        = string
+  default     = ""
+}
+
+variable "disaster_recovery_verify_replication_content" {
+  description = "Content of disaster recovery step 4: verify replication runbook (Seoul)"
+  type        = string
+  default     = ""
+}
+
+variable "disaster_recovery_prepare_failback_content" {
+  description = "Content of disaster recovery prepare failback runbook (Tokyo)"
+  type        = string
+  default     = ""
+}
+
+variable "disaster_recovery_recreate_global_content" {
+  description = "Content of disaster recovery recreate global cluster runbook (Tokyo)"
+  type        = string
+  default     = ""
+}
