@@ -9,11 +9,20 @@ resource "aws_security_group" "app_tokyo_t1" {
     from_port   = 8080
     to_port     = 8080
     protocol    = "tcp"
-
     security_groups = [aws_security_group.alb_tokyo_t1.id]
   }
 
-  # allow all egress (DB/HTTPS/etc)
+  # ICMP (Ping) from IDC via VPN
+  ingress {
+    description = "Allow ICMP from IDC VPN"
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["192.168.0.10/32"]
+  }
+
+  # Outbound allow-all (tighten later if needed)
+
   egress {
     description      = "Allow all outbound traffic"
     from_port        = 0
