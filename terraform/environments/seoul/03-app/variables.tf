@@ -3,6 +3,11 @@ variable "aws_region" {
   type        = string
   default     = "ap-northeast-2"
 }
+variable "enable_route53_tier1_record" {
+  description = "tier1 Route53 record 생성 여부 (글로벌에서 관리하므로 기본 false)"
+  type        = bool
+  default     = false
+}
 
 variable "aurora_app_password" {
   description = "Aurora 앱 계정 비밀번호 (tfvars/CI에서 주입)"

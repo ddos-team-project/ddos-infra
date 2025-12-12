@@ -5,10 +5,10 @@ data "aws_route53_zone" "root" {
 }
 
 resource "aws_route53_record" "tier1" {
-  count   = var.route53_zone_name != null && var.route53_tier1_record != null ? 1 : 0
-  zone_id = data.aws_route53_zone.root[0].zone_id
-  name    = var.route53_tier1_record
-  type    = "A"
+  count          = var.enable_route53_tier1_record ? 1 : 0
+  zone_id        = data.aws_route53_zone.root[0].zone_id
+  name           = var.route53_tier1_record
+  type           = "A"
   set_identifier = "seoul"
 
   weighted_routing_policy {
