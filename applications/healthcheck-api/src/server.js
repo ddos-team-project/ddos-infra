@@ -1,12 +1,18 @@
 const express = require('express');
+const cors = require('cors');
 const { getLocation } = require('./instanceLocation');
 const { checkDbHealth } = require('./dbHealth');
 
 const app = express();
 
+// CORS 설정
+app.use(cors());
+
 const PORT = process.env.PORT || 3000;
 const SERVICE_NAME = process.env.SERVICE_NAME || 'ddos-noncore-api';
 const APP_ENV = process.env.APP_ENV || 'dev';
+const IDC_HOST = process.env.IDC_HOST || '192.168.0.10';
+const IDC_PORT = process.env.IDC_PORT || '3000';
 
 app.get('/health', async (req, res) => {
   const dbStatus = await checkDbHealth();
@@ -61,6 +67,46 @@ app.get('/stress', async (req, res) => {
     env: APP_ENV,
     location,
   });
+});
+
+// IDC 헬스체크 프록시 엔드포인트 (AWS -> VPN -> IDC)
+app.get('/idc-health', async (req, res) => {
+  const location = await getLocation();
+  const start = Date.now();
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+    const response = await fetch(`http://${IDC_HOST}:${IDC_PORT}/health`, {
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    const data = await response.json();
+
+    res.json({
+      status: 'ok',
+      source: 'aws',
+      sourceLocation: location,
+      target: 'idc',
+      targetHost: IDC_HOST,
+      idc: data,
+      latencyMs: Date.now() - start,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    res.json({
+      status: 'error',
+      source: 'aws',
+      sourceLocation: location,
+      target: 'idc',
+      targetHost: IDC_HOST,
+      error: error.name === 'AbortError' ? 'Connection timeout (5s)' : error.message,
+      latencyMs: Date.now() - start,
+      timestamp: new Date().toISOString(),
+    });
+  }
 });
 
 app.listen(PORT, () => {

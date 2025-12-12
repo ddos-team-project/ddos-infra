@@ -1,1 +1,5 @@
 .idea
+# Infra Test
+applications/infra-test/node_modules/
+applications/infra-test/dist/
+applications/test-dashboard/

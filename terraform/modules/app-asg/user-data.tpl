@@ -52,4 +52,6 @@ docker run -d \
   -e DB_USER="${db_user}" \
   -e DB_PASSWORD="$DB_PASSWORD" \
   -e ALLOW_STRESS="${allow_stress}" \
+  -e IDC_HOST="${idc_host}" \
+  -e IDC_PORT="${idc_port}" \
   ${image_uri_full}
