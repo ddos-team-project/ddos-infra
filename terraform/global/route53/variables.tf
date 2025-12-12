@@ -7,13 +7,13 @@ variable "domain_name" {
 variable "api_tier1_record" {
   description = "Tier1 API 레코드(FQDN)"
   type        = string
-  default     = "api-tier1.ddos.io.kr"
+  default     = "tier1.ddos.io.kr"
 }
 
 variable "api_tier2_record" {
   description = "Tier2 API 레코드(FQDN)"
   type        = string
-  default     = "api-tier2.ddos.io.kr"
+  default     = "tier2.ddos.io.kr"
 }
 
 variable "enable_tokyo" {
