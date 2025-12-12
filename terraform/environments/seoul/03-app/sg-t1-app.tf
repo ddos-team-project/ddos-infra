@@ -23,7 +23,7 @@ resource "aws_security_group" "app_seoul_t1" {
     protocol    = "icmp"
     cidr_blocks = ["192.168.0.10/32"]
   }
-ㅈ
+
   ## 아웃바운드
   # 전체 허용 (추후 필요시 3306/80/443 으로 좁히기)
   egress {
@@ -32,7 +32,6 @@ resource "aws_security_group" "app_seoul_t1" {
     to_port          = 0
     protocol         = "-1"
     cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
   }
 
   tags = {
