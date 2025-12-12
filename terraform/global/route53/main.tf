@@ -40,7 +40,7 @@ data "terraform_remote_state" "seoul_app" {
 # 3. 도쿄 ALB Remote State (옵션)
 ###############################
 data "terraform_remote_state" "tokyo_app" {
-  count = var.enable_tokyo ? 1 : 0
+  count   = var.enable_tokyo ? 1 : 0
   backend = "s3"
   config = {
     bucket         = "diehard-ddos-tf-state-lock"
@@ -48,6 +48,45 @@ data "terraform_remote_state" "tokyo_app" {
     region         = "ap-northeast-1"
     dynamodb_table = "terraform-lock-table"
     encrypt        = true
+  }
+}
+
+resource "aws_route53_health_check" "seoul_alb" {
+  fqdn              = data.terraform_remote_state.seoul_app.outputs.healthcheck_alb_dns_name
+  port              = 443
+  type              = "HTTPS"
+  resource_path     = "/health"
+  request_interval  = 30
+  failure_threshold = 3
+
+  regions = [
+    "ap-northeast-1",
+    "ap-southeast-1",
+    "us-west-2"
+  ]
+
+  tags = {
+    Name = "seoul-alb-healthcheck"
+  }
+}
+
+resource "aws_route53_health_check" "tokyo_alb" {
+  count             = var.enable_tokyo ? 1 : 0
+  fqdn              = data.terraform_remote_state.tokyo_app[0].outputs.healthcheck_alb_dns_name
+  port              = 443
+  type              = "HTTPS"
+  resource_path     = "/health"
+  request_interval  = 30
+  failure_threshold = 3
+
+  regions = [
+    "ap-northeast-2",
+    "ap-southeast-1",
+    "us-west-2"
+  ]
+
+  tags = {
+    Name = "tokyo-alb-healthcheck"
   }
 }
 
@@ -70,6 +109,7 @@ resource "aws_route53_record" "tier1_seoul" {
   weighted_routing_policy {
     weight = 80
   }
+  health_check_id = aws_route53_health_check.seoul_alb.id
 }
 
 resource "aws_route53_record" "tier1_tokyo" {
@@ -88,6 +128,7 @@ resource "aws_route53_record" "tier1_tokyo" {
   weighted_routing_policy {
     weight = 20
   }
+  health_check_id = aws_route53_health_check.tokyo_alb[0].id
 }
 
 ################################################################################
@@ -109,6 +150,7 @@ resource "aws_route53_record" "tier2_primary" {
   failover_routing_policy {
     type = "PRIMARY"
   }
+  health_check_id = aws_route53_health_check.seoul_alb.id
 }
 
 resource "aws_route53_record" "tier2_secondary" {
@@ -127,4 +169,5 @@ resource "aws_route53_record" "tier2_secondary" {
   failover_routing_policy {
     type = "SECONDARY"
   }
+  health_check_id = aws_route53_health_check.tokyo_alb[0].id
 }
