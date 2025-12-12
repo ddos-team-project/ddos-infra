@@ -28,7 +28,7 @@ jobs:
       - name: Build Docker image (test only)
         run: |
           cd ${{ env.APP_DIR }}
-          docker build -t healthcheck-api:test .
+          docker build -t healthcheck-api:te
           echo "Build successful"
 
   deploy:
