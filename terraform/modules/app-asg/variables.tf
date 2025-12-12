@@ -170,6 +170,7 @@ variable "app_sg_ids" {
   default     = []
 }
 
+
 variable "idc_host" {
   description = "IDC 서버 IP (VPN 연결용)"
   type        = string
@@ -185,4 +186,5 @@ variable "idc_port" {
 variable "cwagent_ssm_name" {
   description = "SSM parameter name containing CloudWatch Agent config"
   type        = string
+
 }
