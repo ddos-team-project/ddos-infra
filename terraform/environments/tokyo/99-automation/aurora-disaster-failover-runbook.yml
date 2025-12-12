@@ -1,37 +1,90 @@
-description: "Tokyo 리전에서 실행. 상대 리전(Seoul) 장애 시 Tokyo 클러스터를 Global Cluster에서 분리하여 독립 클러스터로 승격시킵니다."
+description: "Tokyo 리전에서 실행. Seoul 리전 전체 장애 시 Tokyo Secondary 클러스터를 Global Cluster에서 분리하여 독립 Primary로 승격합니다."
 schemaVersion: "0.3"
 assumeRole: "{{ AutomationAssumeRole }}"
 
 parameters:
   GlobalClusterIdentifier:
     type: String
-    description: "(필수) Aurora Global Cluster의 ID."
+    description: "(필수) Aurora Global Cluster ID"
     default: "dh-prod-global-rds-v2"
   LocalClusterRegion:
     type: String
-    description: "(필수) 현재 리전 (Tokyo)."
+    description: "(필수) Tokyo 리전"
     default: "ap-northeast-1"
   LocalClusterIdentifier:
     type: String
-    description: "(필수) 현재 리전의 클러스터 ID. Tokyo 클러스터를 Global Cluster에서 분리"
+    description: "(필수) Tokyo 클러스터 ID (Global Cluster에서 분리할 클러스터)"
     default: "dh-prod-db-tokyo-aurora-secondary-v2"
-  LocalClusterEndpoint:
+  FailedRegion:
     type: String
-    description: "(필수) 현재 리전의 클러스터 엔드포인트 주소."
-    default: "dh-prod-db-tokyo-aurora-secondary-v2.cluster-clg0eecwg923.ap-northeast-1.rds.amazonaws.com"
-  DbEndpointParameterName:
+    description: "(필수) 장애 발생 리전"
+    default: "ap-northeast-2"
+  FailedRegionName:
     type: String
-    description: "(필수) DB 엔드포인트 주소를 저장할 SSM Parameter의 이름."
-    default: "/ddos/aurora/cluster_endpoint"
+    description: "(선택) 장애 발생 리전명"
+    default: "Seoul"
+  EmergencyContactEmail:
+    type: String
+    description: "(선택) 긴급 연락처 이메일"
+    default: ""
+  IncidentNumber:
+    type: String
+    description: "(필수) 장애 관리 번호"
+    default: ""
+  SkipSnapshot:
+    type: String
+    description: "(선택) 스냅샷 생성 건너뛰기 - 긴급 페일오버 시 true로 설정하여 시간 단축"
+    default: "false"
+    allowedValues:
+      - "true"
+      - "false"
   AutomationAssumeRole:
     type: String
-    description: "(선택) Automation을 실행할 IAM 역할의 ARN."
+    description: "(선택) Automation 실행 IAM Role ARN"
     default: ""
 
 mainSteps:
+  - name: LogDisasterStart
+    action: aws:executeAwsApi
+    description: "재해 복구 시작 기록"
+    inputs:
+      Service: cloudwatch
+      Api: PutMetricData
+      Namespace: "Aurora/Disaster"
+      MetricData:
+        - MetricName: "DisasterRecoveryStarted"
+          Value: 1
+          Unit: "Count"
+          Dimensions:
+            - Name: "Region"
+              Value: "Tokyo"
+            - Name: "FailedRegion"
+              Value: "{{ FailedRegionName }}"
+
+  - name: VerifyLocalClusterHealth
+    action: aws:executeAwsApi
+    description: "Tokyo 클러스터 정상 작동 확인"
+    inputs:
+      Service: rds
+      Api: DescribeDBClusters
+      DBClusterIdentifier: "{{ LocalClusterIdentifier }}"
+    outputs:
+      - Name: LocalClusterStatus
+        Selector: "$.DBClusters[0].Status"
+        Type: String
+      - Name: LocalClusterArn
+        Selector: "$.DBClusters[0].DBClusterArn"
+        Type: String
+      - Name: LocalClusterEndpoint
+        Selector: "$.DBClusters[0].Endpoint"
+        Type: String
+      - Name: LocalClusterReaderEndpoint
+        Selector: "$.DBClusters[0].ReaderEndpoint"
+        Type: String
+
   - name: VerifyGlobalClusterStatus
     action: aws:executeAwsApi
-    description: "Global Cluster의 상태를 확인합니다. 상대 리전 장애 시에는 조회가 실패할 수 있으므로 에러를 무시합니다."
+    description: "Global Cluster 상태 확인 (Seoul 장애 시 실패 가능)"
     onFailure: Continue
     inputs:
       Service: rds
@@ -42,21 +95,58 @@ mainSteps:
         Selector: "$.GlobalClusters[0].Status"
         Type: String
 
+  - name: CheckSnapshotOption
+    action: aws:branch
+    description: "스냅샷 생성 여부 확인 (긴급 시 스킵 가능)"
+    inputs:
+      Choices:
+        - NextStep: DetachLocalCluster
+          Variable: "{{ SkipSnapshot }}"
+          StringEquals: "true"
+      Default: CreatePreDetachSnapshot
+
+  - name: CreatePreDetachSnapshot
+    action: aws:executeAwsApi
+    description: "분리 전 Tokyo 클러스터 안전 백업"
+    inputs:
+      Service: rds
+      Api: CreateDBClusterSnapshot
+      DBClusterSnapshotIdentifier: "dh-prod-tokyo-disaster-pre-detach-{{ global:DATE }}"
+      DBClusterIdentifier: "{{ LocalClusterIdentifier }}"
+      Tags:
+        - Key: Purpose
+          Value: "DisasterRecoveryBackup"
+        - Key: IncidentNumber
+          Value: "{{ IncidentNumber }}"
+        - Key: FailedRegion
+          Value: "{{ FailedRegionName }}"
+
+  - name: WaitForSnapshotCompletion
+    action: aws:waitForAwsResourceProperty
+    timeoutSeconds: 3600
+    description: "스냅샷 생성 완료 대기"
+    inputs:
+      Service: rds
+      Api: DescribeDBClusterSnapshots
+      DBClusterSnapshotIdentifier: "dh-prod-tokyo-disaster-pre-detach-{{ global:DATE }}"
+      PropertySelector: "$.DBClusterSnapshots[0].Status"
+      DesiredValues:
+        - "available"
+
   - name: DetachLocalCluster
     action: aws:executeAwsApi
-    description: "Tokyo 클러스터를 Global Cluster에서 분리하여 독립 클러스터로 승격시킵니다."
+    description: "Tokyo 클러스터를 Global Cluster에서 분리"
     onFailure: Continue
     inputs:
       Service: rds
       Api: RemoveFromGlobalCluster
       GlobalClusterIdentifier: "{{ GlobalClusterIdentifier }}"
-      DbClusterIdentifier: "{{ LocalClusterIdentifier }}"
+      DbClusterIdentifier: "{{ VerifyLocalClusterHealth.LocalClusterArn }}"
 
   - name: WaitForClusterAvailable
     action: aws:waitForAwsResourceProperty
-    description: "분리된 클러스터가 available 상태가 될 때까지 대기합니다."
-    timeoutSeconds: 900
-    onFailure: Abort
+    description: "분리된 클러스터가 독립적으로 available 상태로 전환 대기"
+    timeoutSeconds: 1800
     inputs:
       Service: rds
       Api: DescribeDBClusters
@@ -65,28 +155,113 @@ mainSteps:
       DesiredValues:
         - "available"
 
-  - name: UpdateSsmParameter
+  - name: VerifyClusterWritable
     action: aws:executeAwsApi
-    description: "Tokyo 클러스터 엔드포인트를 SSM Parameter Store에 업데이트합니다."
-    inputs:
-      Service: ssm
-      Api: PutParameter
-      Name: "{{ DbEndpointParameterName }}"
-      Value: "{{ LocalClusterEndpoint }}"
-      Type: String
-      Overwrite: true
-
-  - name: VerifyDisasterFailover
-    action: aws:executeAwsApi
-    description: "재해 복구 페일오버가 성공적으로 완료되었는지 최종 확인합니다."
+    description: "분리된 Tokyo 클러스터가 Writer로 승격되어 쓰기 가능한지 확인"
     inputs:
       Service: rds
       Api: DescribeDBClusters
       DBClusterIdentifier: "{{ LocalClusterIdentifier }}"
     outputs:
-      - Name: ClusterStatus
+      - Name: FinalClusterStatus
         Selector: "$.DBClusters[0].Status"
         Type: String
-      - Name: ClusterEndpoint
+      - Name: FinalEndpoint
         Selector: "$.DBClusters[0].Endpoint"
         Type: String
+
+  - name: UpdateSSMWriterEndpoint
+    action: aws:executeAwsApi
+    description: "Writer 엔드포인트 SSM 업데이트 (Tokyo)"
+    inputs:
+      Service: ssm
+      Api: PutParameter
+      Name: "/ddos/aurora/cluster_endpoint"
+      Value: "{{ VerifyLocalClusterHealth.LocalClusterEndpoint }}"
+      Type: "String"
+      Overwrite: true
+      Description: "Aurora Writer Endpoint (Tokyo standalone after Seoul disaster)"
+
+  - name: UpdateSSMReaderEndpoint
+    action: aws:executeAwsApi
+    description: "Reader 엔드포인트 SSM 업데이트 (Tokyo)"
+    inputs:
+      Service: ssm
+      Api: PutParameter
+      Name: "/ddos/aurora/cluster_reader_endpoint"
+      Value: "{{ VerifyLocalClusterHealth.LocalClusterReaderEndpoint }}"
+      Type: "String"
+      Overwrite: true
+
+  - name: EnableBackupRetention
+    action: aws:executeAwsApi
+    description: "백업 보관 기간 확인 및 설정"
+    onFailure: Continue
+    inputs:
+      Service: rds
+      Api: ModifyDBCluster
+      DBClusterIdentifier: "{{ LocalClusterIdentifier }}"
+      BackupRetentionPeriod: 35
+      ApplyImmediately: true
+
+  - name: CreateDisasterRecoveryAlarm
+    action: aws:executeAwsApi
+    description: "재해 복구 모니터링 알람 생성"
+    inputs:
+      Service: cloudwatch
+      Api: PutMetricAlarm
+      AlarmName: "aurora-disaster-recovery-tokyo-standalone"
+      AlarmDescription: "Tokyo 클러스터 독립 운영 중 모니터링 (Seoul 장애)"
+      ActionsEnabled: true
+      MetricName: "CPUUtilization"
+      Namespace: "AWS/RDS"
+      Statistic: "Average"
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 80
+      ComparisonOperator: "GreaterThanThreshold"
+      Dimensions:
+        - Name: DBClusterIdentifier
+          Value: "{{ LocalClusterIdentifier }}"
+
+  - name: LogDisasterComplete
+    action: aws:executeAwsApi
+    description: "재해 복구 완료 기록"
+    inputs:
+      Service: cloudwatch
+      Api: PutMetricData
+      Namespace: "Aurora/Disaster"
+      MetricData:
+        - MetricName: "DisasterRecoveryCompleted"
+          Value: 1
+          Unit: "Count"
+          Dimensions:
+            - Name: "Region"
+              Value: "Tokyo"
+            - Name: "FailedRegion"
+              Value: "{{ FailedRegionName }}"
+
+  - name: CreateAuditRecord
+    action: aws:executeAwsApi
+    description: "감사 기록 생성"
+    inputs:
+      Service: ssm
+      Api: PutParameter
+      Name: "/ddos/aurora/disaster-recovery/tokyo-{{ global:DATE }}"
+      Value: "Incident: {{ IncidentNumber }}, Failed Region: {{ FailedRegionName }}, Recovery Region: Tokyo, Recovery Time: {{ global:DATE_TIME }}"
+      Type: "String"
+      Overwrite: true
+      Description: "Disaster Recovery Audit Record - Seoul Failure"
+      Tags:
+        - Key: Type
+          Value: "AuditLog"
+        - Key: Incident
+          Value: "{{ IncidentNumber }}"
+        - Key: FailedRegion
+          Value: "{{ FailedRegionName }}"
+
+outputs:
+  - VerifyLocalClusterHealth.LocalClusterStatus
+  - VerifyLocalClusterHealth.LocalClusterEndpoint
+  - VerifyClusterWritable.FinalClusterStatus
+  - VerifyClusterWritable.FinalEndpoint
