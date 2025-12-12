@@ -24,7 +24,9 @@ data "aws_iam_policy_document" "ec2_policy" {
     actions = [
       "logs:CreateLogGroup",
       "logs:CreateLogStream",
-      "logs:PutLogEvents"
+      "logs:PutLogEvents",
+      "logs:DescribeLogStreams",
+      "logs:DescribeLogGroups"
     ]
     resources = ["*"]
   }
@@ -85,6 +87,7 @@ data "template_file" "user_data" {
     db_name            = var.db_name
     db_user            = var.db_user
     ssm_parameter_name = var.ssm_parameter_name
+    cwagent_ssm_name   = var.cwagent_ssm_name
   }
 }
 
@@ -121,6 +124,7 @@ resource "aws_launch_template" "this" {
     db_name            = var.db_name
     db_user            = var.db_user
     ssm_parameter_name = var.ssm_parameter_name
+    cwagent_ssm_name   = var.cwagent_ssm_name
   }))
 
   network_interfaces {

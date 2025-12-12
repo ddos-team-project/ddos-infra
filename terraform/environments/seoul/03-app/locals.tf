@@ -21,4 +21,13 @@ locals {
     Region  = "seoul"
     System  = "healthcheck-api"
   }
+
+  common_tags = {
+    Project   = var.project
+    Env       = var.env
+    Tier      = var.tier
+    Region    = var.region_code # 태그는 apne2
+    ManagedBy = "terraform"
+    Owner     = var.owner
+  }
 }

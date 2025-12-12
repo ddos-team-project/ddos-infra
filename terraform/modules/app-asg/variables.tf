@@ -145,3 +145,8 @@ variable "app_sg_ids" {
   type        = list(string)
   default     = []
 }
+
+variable "cwagent_ssm_name" {
+  description = "SSM parameter name containing CloudWatch Agent config"
+  type        = string
+}
