@@ -18,7 +18,7 @@ resource "aws_security_group" "app_tokyo_t1" {
     from_port   = -1
     to_port     = -1
     protocol    = "icmp"
-    cidr_blocks = ["192.168.0.10/32"]
+    cidr_blocks = [local.idc_host_cidr]
   }
 
   # Outbound allow-all (tighten later if needed)
