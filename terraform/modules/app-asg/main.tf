@@ -22,7 +22,6 @@ data "aws_iam_policy_document" "ec2_policy" {
 
   statement {
     actions = [
-      "logs:CreateLogGroup",
       "logs:CreateLogStream",
       "logs:PutLogEvents",
       "logs:DescribeLogStreams",
