@@ -52,3 +52,9 @@ output "tgw_attachment_id" {
   description = "Transit Gateway VPC Attachment ID"
   value       = aws_ec2_transit_gateway_vpc_attachment.tokyo_tgw_att.id
 }
+
+# IDC 설정 출력
+output "idc_host_cidr" {
+  description = "IDC 라즈베리파이 호스트 CIDR"
+  value       = var.idc_host_cidr
+}

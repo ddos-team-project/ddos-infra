@@ -21,7 +21,7 @@ resource "aws_security_group" "app_seoul_t1" {
     from_port   = -1 # 모든 ICMP
     to_port     = -1
     protocol    = "icmp"
-    cidr_blocks = ["192.168.0.10/32"]
+    cidr_blocks = [local.idc_host_cidr]
   }
 
   ## 아웃바운드

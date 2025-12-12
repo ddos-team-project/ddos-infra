@@ -111,3 +111,22 @@ variable "tgw_name" {
   type        = string
   default     = "dh-prod-net-seoul-tgw"
 }
+
+# IDC VPN 설정
+variable "idc_public_ip" {
+  description = "IDC 라즈베리파이 공인 IP"
+  type        = string
+  default     = "39.118.88.182"
+}
+
+variable "idc_cidr" {
+  description = "IDC 내부 네트워크 CIDR"
+  type        = string
+  default     = "192.168.0.0/24"
+}
+
+variable "idc_host_cidr" {
+  description = "IDC 라즈베리파이 호스트 CIDR"
+  type        = string
+  default     = "192.168.0.10/32"
+}

@@ -49,6 +49,6 @@ module "vpc" {
 resource "aws_route" "private_to_onprem" {
   for_each               = toset(module.vpc.private_route_table_ids)
   route_table_id         = each.value
-  destination_cidr_block = "192.168.0.0/24"
+  destination_cidr_block = var.idc_cidr
   transit_gateway_id     = aws_ec2_transit_gateway.tokyo_tgw.id
 }

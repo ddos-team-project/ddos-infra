@@ -10,7 +10,7 @@
 # Customer Gateway (IDC 라즈베리파이)
 resource "aws_customer_gateway" "idc" {
   bgp_asn    = 65000           # Private ASN
-  ip_address = "39.118.88.182" # 라즈베리파이 공인 IP
+  ip_address = var.idc_public_ip
   type       = "ipsec.1"
 
   tags = merge(
@@ -66,7 +66,7 @@ resource "aws_vpn_connection" "idc" {
 
 # TGW Route Table: 192.168.0.0/24 -> IDC(VPN) Attachment
 resource "aws_ec2_transit_gateway_route" "idc_192_168_0_0_24" {
-  destination_cidr_block         = "192.168.0.10/32"
+  destination_cidr_block         = var.idc_host_cidr
   transit_gateway_route_table_id = aws_ec2_transit_gateway.seoul_tgw.association_default_route_table_id
   transit_gateway_attachment_id  = aws_vpn_connection.idc.transit_gateway_attachment_id
 }
