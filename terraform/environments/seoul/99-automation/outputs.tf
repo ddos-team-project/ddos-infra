@@ -10,10 +10,10 @@ output "iam_role_name" {
 
 output "failover_document_name" {
   description = "Aurora 페일오버 SSM Automation Document 이름"
-  value       = module.aurora_automation.failover_document_name
+  value       = aws_ssm_document.aurora_failover_runbook.name
 }
 
 output "failback_document_name" {
   description = "Aurora 페일백 SSM Automation Document 이름"
-  value       = module.aurora_automation.failback_document_name
+  value       = aws_ssm_document.aurora_failback_runbook.name
 }
