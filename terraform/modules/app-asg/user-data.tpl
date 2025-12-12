@@ -1,19 +1,19 @@
 ﻿#!/bin/bash
 set -xe
 
-# SELinux kernel reload 방지 (user-data 중단 현상 우회)
+# SELinux kernel reload 방지 (user-data 중단 현상 해결)
 sudo dnf config-manager --save --setopt=selinux=0 || true
 
-# Docker 설치 (AL2023 패키지명: moby-*)
+# Docker 설치 (AL2023 패키지명은 moby-*)
 sudo dnf install -y docker || sudo dnf install -y moby-engine moby-cli
 
-# Docker 실행 및 부팅연동 설정
+# Docker 실행 및 부팅 시 자동 시작
 sudo systemctl enable --now docker
 
 # ec2-user docker 그룹 추가
 sudo usermod -aG docker ec2-user
 
-# AWS CLI 설치 (필요시)
+# AWS CLI 설치 (필요하면)
 if ! command -v aws &>/dev/null; then
   sudo dnf install -y awscli
 fi
@@ -22,14 +22,14 @@ fi
 aws ecr get-login-password --region ${aws_region} \
   | docker login --username AWS --password-stdin ${image_uri_registry}
 
-# 기존 컨테이너 정리
+# 기존 컨테이너 제거
 docker stop ${service_name} 2>/dev/null || true
 docker rm ${service_name} 2>/dev/null || true
 
 # 최신 이미지 pull
 docker pull ${image_uri_full}
 
-# [중요] SSM Parameter Store에서 DB 비밀번호 조회 (KMS 복호화 포함)
+# 👇 [중요] SSM Parameter Store에서 DB 비밀번호 조회 (KMS 복호화 포함)
 DB_PASSWORD=$(aws ssm get-parameter \
   --name "${db_password_ssm_path}" \
   --with-decryption \
@@ -55,16 +55,15 @@ docker run -d \
   -e IDC_PORT="${idc_port}" \
   ${image_uri_full}
 
-# CloudWatch Agent 설치/설정
+# CloudWatch Agent 설치 및 설정 적용
 sudo dnf install -y amazon-cloudwatch-agent
 sudo mkdir -p /opt/aws/amazon-cloudwatch-agent/etc
 aws ssm get-parameter \
-  --name "/prod/ddos/t1/seoul/cloudwatch/config" \
+  --name "${cwagent_ssm_name}" \
   --with-decryption \
-  --region ${aws_region} \ 
   --query "Parameter.Value" \
   --output text \
-
+  --region ${aws_region} \
   | sudo tee /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json >/dev/null
 
 sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
