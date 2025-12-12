@@ -37,15 +37,26 @@ resource "aws_iam_policy" "ssm_automation_policy" {
           "rds:FailoverGlobalCluster",
           "rds:RemoveFromGlobalCluster",
           "rds:DescribeGlobalClusters",
-          "rds:DescribeDBClusters"
+          "rds:DescribeDBClusters",
+          "rds:CreateDBClusterSnapshot",
+          "rds:DescribeDBClusterSnapshots"
         ],
         Resource = "*"
       },
       # SSM Parameter 수정 권한
       {
         Effect   = "Allow",
-        Action   = "ssm:PutParameter",
-        Resource = "arn:aws:ssm:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:parameter${var.db_endpoint_parameter_name}"
+        Action   = ["ssm:PutParameter", "ssm:GetParameter"],
+        Resource = "arn:aws:ssm:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:parameter/*"
+      },
+      # CloudWatch 권한
+      {
+        Effect = "Allow",
+        Action = [
+          "cloudwatch:PutMetricData",
+          "cloudwatch:PutMetricAlarm"
+        ],
+        Resource = "*"
       }
     ]
   })
@@ -57,37 +68,4 @@ resource "aws_iam_policy" "ssm_automation_policy" {
 resource "aws_iam_role_policy_attachment" "ssm_automation_attach" {
   role       = aws_iam_role.ssm_automation_role.name
   policy_arn = aws_iam_policy.ssm_automation_policy.arn
-}
-
-# SSM Automation Document - Failover
-resource "aws_ssm_document" "aurora_failover_runbook" {
-  name            = "Aurora-Failover-Runbook-${var.region_name}"
-  document_type   = "Automation"
-  document_format = "YAML"
-
-  content = var.failover_runbook_content
-
-  tags = var.tags
-}
-
-# SSM Automation Document - Failback
-resource "aws_ssm_document" "aurora_failback_runbook" {
-  name            = "Aurora-Failback-Runbook-${var.region_name}"
-  document_type   = "Automation"
-  document_format = "YAML"
-
-  content = var.failback_runbook_content
-
-  tags = var.tags
-}
-
-# SSM Automation Document - Disaster Failover (리전 전체 장애 시)
-resource "aws_ssm_document" "aurora_disaster_failover_runbook" {
-  name            = "Aurora-Disaster-Failover-Runbook-${var.region_name}"
-  document_type   = "Automation"
-  document_format = "YAML"
-
-  content = var.disaster_failover_runbook_content
-
-  tags = var.tags
 }
