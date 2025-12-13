@@ -37,13 +37,12 @@ module "healthcheck_api_asg" {
   region_label = "tokyo"
   app_env      = "prod"
 
-  db_host = local.db_host
-  db_name = "ddos_noncore"
-  db_user = "admin"
-
-  cwagent_ssm_name     = "/prod/ddos/t1/tokyo/cloudwatch/config"
+  db_host              = local.db_host
+  db_name              = "ddos_noncore"
+  db_user              = "admin"
   db_password_ssm_path = "/ddos/aurora/password"
-  cwagent_ssm_name   = "/prod/ddos/t1/tokyo/cloudwatch/config"
+
+  cwagent_ssm_name = "/prod/ddos/t1/tokyo/cloudwatch/config"
 
   target_group_arns = [module.healthcheck_api_alb.target_group_arn]
 
