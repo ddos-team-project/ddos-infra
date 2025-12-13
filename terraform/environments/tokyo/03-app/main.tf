@@ -30,23 +30,17 @@ module "healthcheck_api_asg" {
   app_port       = 8080
   container_port = 3000
 
-  image_uri  = local.image_uri
-  aws_region = "ap-northeast-1"
-
-  service_name = "ddos-healthcheck-api"
-  region_label = "tokyo"
-  app_env      = "prod"
-
-  db_host = local.db_host
-  db_name = "ddos_noncore"
-  db_user = "admin"
-
+  image_uri            = local.image_uri
+  aws_region           = "ap-northeast-1"
+  service_name         = "ddos-healthcheck-api"
+  region_label         = "tokyo"
+  app_env              = "prod"
+  db_host              = local.db_host
+  db_name              = "ddos_noncore"
+  db_user              = "admin"
   db_password_ssm_path = "/ddos/aurora/password"
-  cwagent_ssm_name   = "/prod/ddos/t1/tokyo/cloudwatch/config"
-
-  cwagent_ssm_name = "/prod/ddos/t1/tokyo/cloudwatch/config"
-
-  target_group_arns = [module.healthcheck_api_alb.target_group_arn]
+  cwagent_ssm_name     = "/prod/ddos/t1/tokyo/cloudwatch/config"
+  target_group_arns    = [module.healthcheck_api_alb.target_group_arn]
 
   tags = local.tags
 }
