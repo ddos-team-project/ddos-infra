@@ -28,3 +28,57 @@ variable "route53_tier1_record" {
   type        = string
   default     = "tier1.ddos.io.kr"
 }
+
+variable "project" {
+  description = "Project code (e.g. ddos)"
+  type        = string
+  default     = "ddos"
+}
+
+variable "env" {
+  description = "Environment (e.g. prod)"
+  type        = string
+  default     = "prod"
+}
+
+variable "region" {
+  description = "Logical region name"
+  type        = string
+  default     = "tokyo"
+}
+
+variable "tier" {
+  description = "Tier (e.g. t1)"
+  type        = string
+  default     = "t1"
+}
+
+variable "service_name" {
+  description = "Service name (e.g. healthcheck-api)"
+  type        = string
+  default     = "healthcheck-api"
+}
+
+variable "retention_in_days" {
+  description = "Log retention in days"
+  type        = number
+  default     = 30
+}
+
+variable "region_code" {
+  description = "Short region code (apne2, apne1)"
+  type        = string
+  default     = "apne1"
+}
+
+variable "owner" {
+  description = "Resource owner"
+  type        = string
+  default     = "devops"
+}
+
+variable "alarm_topic_arn" {
+  description = "SNS topic ARN for CloudWatch alarms"
+  type        = string
+  default     = null
+}
