@@ -12,3 +12,13 @@ output "healthcheck_app_sg_id" {
   description = "Healthcheck API App security group ID"
   value       = module.healthcheck_api_asg.app_sg_id
 }
+
+output "healthcheck_alb_suffix" {
+  description = "Healthcheck API ALB suffix for CloudWatch metrics"
+  value       = local.alb_suffix
+}
+
+output "healthcheck_asg_name" {
+  description = "Healthcheck API ASG name"
+  value       = module.healthcheck_api_asg.autoscaling_group_name
+}
