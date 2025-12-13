@@ -6,12 +6,15 @@ const API_URL = 'https://tier1.ddos.io.kr'
 
 function getRegionDisplay(region) {
   if (!region) return { flag: '🌐', name: 'Unknown' }
+
   if (region.includes('northeast-2') || region.toLowerCase().includes('seoul')) {
     return { flag: '🇰🇷', name: 'SEOUL' }
   }
+
   if (region.includes('northeast-1') || region.toLowerCase().includes('tokyo')) {
     return { flag: '🇯🇵', name: 'TOKYO' }
   }
+
   return { flag: '🌐', name: region.toUpperCase() }
 }
 
@@ -22,14 +25,20 @@ export default function IdcCard() {
 
   const runTest = async () => {
     setLoading(true)
+
     const start = performance.now()
 
     try {
       const response = await fetch(`${API_URL}/idc-health`)
       const data = await response.json()
+
+      console.log('[IDC-HEALTH] Response:', data)
+
       setLatency(Math.round(performance.now() - start))
       setResult(data)
     } catch (error) {
+      console.error('[IDC-HEALTH] Error:', error)
+
       setLatency(Math.round(performance.now() - start))
       setResult({ error: error.message, status: 'error' })
     } finally {
