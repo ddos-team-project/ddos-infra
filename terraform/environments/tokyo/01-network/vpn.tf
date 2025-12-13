@@ -28,15 +28,13 @@ resource "aws_vpn_connection" "idc" {
   type                = "ipsec.1"
   static_routes_only  = true
 
-  # VPN ?�널 ?�션 (?�울�??�른 ?�???�용)
-  tunnel1_inside_cidr = "169.254.45.0/30"  # ?�울�?겹치지 ?�게
-  tunnel2_inside_cidr = "169.254.45.4/30"  # ?�울�?겹치지 ?�게
+  tunnel1_inside_cidr = "169.254.45.0/30"
+  tunnel2_inside_cidr = "169.254.45.4/30"
 
-  # DPD (Dead Peer Detection) ?�정
+  # DPD (Dead Peer Detection)
   tunnel1_dpd_timeout_action = "restart"
   tunnel2_dpd_timeout_action = "restart"
 
-  # ?�호???�정 (Phase 1 - IKE)
   tunnel1_phase1_encryption_algorithms = ["AES256"]
   tunnel1_phase1_integrity_algorithms  = ["SHA2-256"]
   tunnel1_phase1_dh_group_numbers      = [14]  # modp2048
@@ -47,7 +45,6 @@ resource "aws_vpn_connection" "idc" {
   tunnel2_phase1_dh_group_numbers      = [14]
   tunnel2_ike_versions                 = ["ikev2"]
 
-  # ?�호???�정 (Phase 2 - ESP)
   tunnel1_phase2_encryption_algorithms = ["AES256"]
   tunnel1_phase2_integrity_algorithms  = ["SHA2-256"]
   tunnel1_phase2_dh_group_numbers      = [14]
