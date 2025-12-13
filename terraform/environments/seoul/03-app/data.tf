@@ -18,4 +18,13 @@ data "terraform_remote_state" "db" {
   }
 }
 
+data "terraform_remote_state" "db_tokyo" {
+  backend = "s3"
+  config = {
+    bucket = "diehard-ddos-tf-state-lock"
+    key    = "tokyo/02-data/terraform.tfstate"
+    region = "ap-northeast-2"
+  }
+}
+
 data "aws_caller_identity" "current" {}

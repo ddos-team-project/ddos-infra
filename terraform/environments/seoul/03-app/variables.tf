@@ -76,6 +76,66 @@ variable "owner" {
   default     = "devops"
 }
 
+variable "route53_healthcheck_ids" {
+  description = "Route53 health check IDs map { seoul = \"...\", tokyo = \"...\" }"
+  type = object({
+    seoul = string
+    tokyo = string
+  })
+  default = {
+    seoul = "f6f74063-271b-44cf-b3dd-2c20d90efba6"
+    tokyo = "29ee2bfd-7678-474f-b6ee-d421c9712eae"
+  }
+}
+
+variable "alb_suffix_tokyo" {
+  description = "ALB suffix for Tokyo (LoadBalancer dimension value, e.g. app/xxx-alb/...)"
+  type        = string
+  default     = "app/healthcheck-api-tokyo-alb/e96ebc5e91cc7975"
+}
+
+variable "alb_5xx_rate_threshold" {
+  description = "ALB 5xx rate threshold (5xx / RequestCount). Default 5%."
+  type        = number
+  default     = 0.05
+}
+
+variable "alb_unhealthy_host_ratio_threshold" {
+  description = "ALB UnhealthyHostCount ratio threshold (Unhealthy / (Healthy+Unhealthy)). Default 50%."
+  type        = number
+  default     = 0.5
+}
+
+variable "alb_request_count_floor" {
+  description = "RequestCount floor for RPS drop alarm (Sum per minute). Set based on normal traffic."
+  type        = number
+  default     = 50
+}
+
+variable "enable_synthetics_canary" {
+  description = "Whether to deploy CloudWatch Synthetics canary for /health."
+  type        = bool
+  default     = false
+}
+
+variable "synthetics_canary_url" {
+  description = "Target URL for synthetics /health check."
+  type        = string
+  default     = ""
+}
+
+variable "synthetics_artifact_bucket" {
+  description = "S3 bucket for synthetics artifacts (required when enable_synthetics_canary=true)."
+  type        = string
+  default     = ""
+}
+
+variable "synthetics_schedule_expression" {
+  description = "Schedule expression for synthetics canary."
+  type        = string
+  default     = "rate(5 minutes)"
+}
+
 variable "alarm_topic_arn" {
   description = "SNS topic ARN for CloudWatch alarms"
   type        = string
