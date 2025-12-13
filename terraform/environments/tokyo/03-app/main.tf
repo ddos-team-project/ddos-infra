@@ -43,6 +43,7 @@ module "healthcheck_api_asg" {
 
   cwagent_ssm_name     = "/prod/ddos/t1/tokyo/cloudwatch/config"
   db_password_ssm_path = "/ddos/aurora/password"
+  cwagent_ssm_name   = "/prod/ddos/t1/tokyo/cloudwatch/config"
 
   target_group_arns = [module.healthcheck_api_alb.target_group_arn]
 
