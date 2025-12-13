@@ -42,6 +42,7 @@ module "healthcheck_api_asg" {
   db_user = "admin"
 
   db_password_ssm_path = "/ddos/aurora/password"
+  cwagent_ssm_name   = "/prod/ddos/t1/tokyo/cloudwatch/config"
 
   cwagent_ssm_name = "/prod/ddos/t1/tokyo/cloudwatch/config"
 
