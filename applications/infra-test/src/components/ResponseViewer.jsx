@@ -8,6 +8,7 @@ function formatJson(obj, indent = 0) {
 
   if (Array.isArray(obj)) {
     if (obj.length === 0) return '[]'
+
     return (
       <>
         {'[\n'}
@@ -25,7 +26,9 @@ function formatJson(obj, indent = 0) {
 
   if (typeof obj === 'object') {
     const keys = Object.keys(obj)
+
     if (keys.length === 0) return '{}'
+
     return (
       <>
         {'{\n'}

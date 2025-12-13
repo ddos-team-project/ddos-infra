@@ -1,6 +1,7 @@
 const http = require('http');
 
 const METADATA_HOST = '169.254.169.254';
+
 let cachedLocation = null;
 
 function imdsRequest(options, timeoutMs) {
@@ -9,9 +10,11 @@ function imdsRequest(options, timeoutMs) {
       { host: METADATA_HOST, timeout: timeoutMs, ...options },
       (res) => {
         let data = '';
+
         res.on('data', (chunk) => {
           data += chunk;
         });
+
         res.on('end', () => {
           if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
             resolve(data);
@@ -58,6 +61,7 @@ async function getAz(timeoutMs = 500) {
 
 function deriveRegionFromAz(az) {
   const match = az && az.match(/^([a-z]{2}-[a-z]+-\d)[a-z]$/);
+
   return match ? match[1] : null;
 }
 
@@ -66,7 +70,9 @@ async function getLocation() {
 
   const az = await getAz();
   const region = process.env.REGION || deriveRegionFromAz(az) || 'local';
+
   cachedLocation = { region, az };
+
   return cachedLocation;
 }
 

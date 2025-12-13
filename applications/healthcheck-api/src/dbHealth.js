@@ -12,36 +12,44 @@ let pool;
 
 function getMissingDbConfig() {
   const missing = [];
+
   if (!DB_CONFIG.host) missing.push('DB_HOST');
   if (!DB_CONFIG.user) missing.push('DB_USER');
   if (!DB_CONFIG.password) missing.push('DB_PASSWORD');
   if (!DB_CONFIG.database) missing.push('DB_NAME');
+
   return missing;
 }
 
 function getPool() {
   if (pool) return pool;
+
   const missing = getMissingDbConfig();
+
   if (missing.length) {
     throw new Error(`missing env: ${missing.join(', ')}`);
   }
+
   pool = mysql.createPool({
     ...DB_CONFIG,
     waitForConnections: true,
     connectionLimit: 5,
     queueLimit: 0,
   });
+
   return pool;
 }
 
 async function checkDbHealth() {
   const missing = getMissingDbConfig();
+
   if (missing.length) {
     return { status: 'error', message: `missing env: ${missing.join(', ')}` };
   }
 
   try {
     const conn = await getPool().getConnection();
+
     try {
       await conn.query('SELECT 1');
       return { status: 'ok' };
