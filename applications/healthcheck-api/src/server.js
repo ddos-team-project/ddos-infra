@@ -5,8 +5,11 @@ const { checkDbHealth } = require('./dbHealth');
 
 const app = express();
 
-// CORS 설정
-app.use(cors());
+app.use(cors({
+  origin: 'https://infra.ddos.io.kr',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  credentials: true,
+}));
 
 const PORT = process.env.PORT || 3000;
 const SERVICE_NAME = process.env.SERVICE_NAME || 'ddos-noncore-api';
@@ -43,11 +46,13 @@ app.get('/ping', async (req, res) => {
 
 app.get('/stress', async (req, res) => {
   const ALLOW_STRESS = process.env.ALLOW_STRESS === 'true';
+
   if (!ALLOW_STRESS) {
     return res.status(403).json({ status: 'forbidden', message: 'stress endpoint disabled' });
   }
 
   const seconds = Number(req.query.seconds || 10);
+
   if (Number.isNaN(seconds) || seconds <= 0) {
     return res.status(400).json({ status: 'bad_request', message: 'seconds must be > 0' });
   }
@@ -69,7 +74,6 @@ app.get('/stress', async (req, res) => {
   });
 });
 
-// IDC 헬스체크 프록시 엔드포인트 (AWS -> VPN -> IDC)
 app.get('/idc-health', async (req, res) => {
   const location = await getLocation();
   const start = Date.now();
@@ -81,6 +85,7 @@ app.get('/idc-health', async (req, res) => {
     const response = await fetch(`http://${IDC_HOST}:${IDC_PORT}/health`, {
       signal: controller.signal,
     });
+
     clearTimeout(timeoutId);
 
     const data = await response.json();
