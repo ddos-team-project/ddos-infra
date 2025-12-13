@@ -10,7 +10,7 @@ resource "aws_cloudwatch_dashboard" "ddos_prod" {
           view   = "timeSeries"
           region = "ap-northeast-2"
           metrics = [
-            ["AWS/ApplicationELB", "RequestCount", "LoadBalancer", local.alb_suffix],
+            ["AWS/ApplicationELB", "RequestCount", "LoadBalancer", local.seoul_alb_suffix],
             [".", "HTTPCode_Target_5XX_Count", ".", "."],
             [".", "TargetResponseTime", ".", ".", { "stat" : "p95" }]
           ]
@@ -25,8 +25,8 @@ resource "aws_cloudwatch_dashboard" "ddos_prod" {
           view   = "timeSeries"
           region = "ap-northeast-2"
           metrics = [
-            ["AWS/EC2", "CPUUtilization", "AutoScalingGroupName", module.healthcheck_api_asg.autoscaling_group_name],
-            ["AWS/EC2", "StatusCheckFailed", "AutoScalingGroupName", module.healthcheck_api_asg.autoscaling_group_name]
+            ["AWS/EC2", "CPUUtilization", "AutoScalingGroupName", local.seoul_asg_name],
+            ["AWS/EC2", "StatusCheckFailed", "AutoScalingGroupName", local.seoul_asg_name]
           ]
           period = 60
         }
@@ -39,7 +39,7 @@ resource "aws_cloudwatch_dashboard" "ddos_prod" {
           view   = "timeSeries"
           region = "ap-northeast-1"
           metrics = [
-            ["AWS/ApplicationELB", "RequestCount", "LoadBalancer", "app/healthcheck-api-tokyo-alb/e96ebc5e91cc7975"],
+            ["AWS/ApplicationELB", "RequestCount", "LoadBalancer", local.tokyo_alb_suffix],
             [".", "HTTPCode_Target_5XX_Count", ".", "."],
             [".", "TargetResponseTime", ".", ".", { "stat" : "p95" }]
           ]
@@ -54,8 +54,8 @@ resource "aws_cloudwatch_dashboard" "ddos_prod" {
           view   = "timeSeries"
           region = "ap-northeast-1"
           metrics = [
-            ["AWS/EC2", "CPUUtilization", "AutoScalingGroupName", "healthcheck-api-tokyo-asg"],
-            ["AWS/EC2", "StatusCheckFailed", "AutoScalingGroupName", "healthcheck-api-tokyo-asg"]
+            ["AWS/EC2", "CPUUtilization", "AutoScalingGroupName", local.tokyo_asg_name],
+            ["AWS/EC2", "StatusCheckFailed", "AutoScalingGroupName", local.tokyo_asg_name]
           ]
           period = 60
         }
