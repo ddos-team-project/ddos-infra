@@ -1,4 +1,7 @@
 locals {
+  alb_suffix = regex("loadbalancer/(.*)", module.healthcheck_api_alb.alb_arn)[0]
+  tg_suffix  = regex("targetgroup/(.*)", module.healthcheck_api_alb.target_group_arn)[0]
+
   name_prefix = "healthcheck-api-tokyo"
   vpc_id      = data.terraform_remote_state.network.outputs.vpc_id
 
