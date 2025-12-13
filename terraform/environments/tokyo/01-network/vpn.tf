@@ -1,15 +1,15 @@
 # ============================================================
 # VPN Connection to IDC (Raspberry Pi)
 # ============================================================
-# IDC ?�즈베리?�이?� ?�쿄 TGW �?Site-to-Site VPN ?�결
-# - Active-Active 구성 (Tunnel 2�?
+# IDC 라즈베리파이와 도쿄 TGW 간 Site-to-Site VPN 연결
+# - Active-Active 구성 (Tunnel 2개)
 # - Static Routing
-# - TGW ECMP 지?�으�??�래??분산
+# - TGW ECMP 지원으로 트래픽 분산
 # ============================================================
 
-# Customer Gateway (IDC ?�즈베리?�이)
+# Customer Gateway (IDC 라즈베리파이)
 resource "aws_customer_gateway" "idc" {
-  bgp_asn    = 65000  # Private ASN (?�울�??�일)
+  bgp_asn    = 65000
   ip_address = var.idc_public_ip
   type       = "ipsec.1"
 
@@ -70,8 +70,4 @@ resource "aws_ec2_transit_gateway_route" "idc_192_168_0_0_24" {
   transit_gateway_route_table_id = aws_ec2_transit_gateway.tokyo_tgw.association_default_route_table_id
   transit_gateway_attachment_id  = aws_vpn_connection.idc.transit_gateway_attachment_id
 }
-# TGW Route Table ?�동 ?�파
-# TGW ?�정??default_route_table_propagation = "enable"�??�해
-# VPN Connection ?�성 ???�동?�로 192.168.0.0/24 경로가 TGW Route Table??추�???
-# ?�라??별도??Static Route 리소??불필??
 
