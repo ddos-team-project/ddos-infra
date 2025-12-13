@@ -32,7 +32,7 @@ docker pull ${image_uri_full}
 
 # 👇 [중요] SSM Parameter Store에서 DB 비밀번호 조회 (KMS 복호화 포함)
 DB_PASSWORD=$(aws ssm get-parameter \
-  --name "${ssm_parameter_name}" \
+  --name "${db_password_ssm_path}" \
   --with-decryption \
   --query "Parameter.Value" \
   --output text \
@@ -59,9 +59,9 @@ docker run -d \
 sudo dnf install -y amazon-cloudwatch-agent
 sudo mkdir -p /opt/aws/amazon-cloudwatch-agent/etc
 aws ssm get-parameter \
-  --name "/prod/ddos/t1/seoul/cloudwatch/config" \
+  --name "${cwagent_ssm_name}" \
   --with-decryption \
-  --region ap-northeast-2 \
+  --region ${aws_region} \
   --query "Parameter.Value" \
   --output text \
   | sudo tee /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json >/dev/null

@@ -8,6 +8,13 @@ locals {
   app_subnet_ids = data.terraform_remote_state.network.outputs.app_subnets
   alb_subnet_ids = data.terraform_remote_state.network.outputs.public_subnets
 
+  alb_suffix_tokyo = var.alb_suffix_tokyo
+
+  alb_suffixes = {
+    seoul = local.alb_suffix
+    tokyo = local.alb_suffix_tokyo
+  }
+
   # IDC 설정
   idc_host_cidr = data.terraform_remote_state.network.outputs.idc_host_cidr
 
@@ -36,4 +43,13 @@ locals {
     ManagedBy = "terraform"
     Owner     = var.owner
   }
+
+  db_cluster_ids = {
+    seoul = data.terraform_remote_state.db.outputs.cluster_id
+    tokyo = data.terraform_remote_state.db_tokyo.outputs.cluster_id
+  }
+
+  synthetics_canary_url      = length(trimspace(var.synthetics_canary_url)) > 0 ? var.synthetics_canary_url : "https://${var.route53_tier1_record}/health"
+  synthetics_canary_name     = "${local.name_prefix}-health-canary"
+  synthetics_artifact_prefix = "s3://${var.synthetics_artifact_bucket}/synthetics/${local.name_prefix}"
 }
