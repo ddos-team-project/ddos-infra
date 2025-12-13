@@ -62,3 +62,16 @@ module "aurora_secondary" {
     }
   )
 }
+
+module "cloudwatch_logs" {
+  source = "../../../modules/cloudwatch/log-group"
+
+  project = var.project
+  env     = var.environment
+  region  = var.location
+  tier    = "db"
+
+  services = ["aurora"]
+
+  retention_in_days = 30
+}
