@@ -7,7 +7,7 @@ const getApiUrl = () => {
   return `https://${randomId}.tier1.ddos.io.kr`
 }
 
-export default function RoutingTest() {
+export default function RoutingTest({ onFlowTrigger }) {
   const [results, setResults] = useState({ seoul: 0, tokyo: 0, unknown: 0 })
   const [totalRequests, setTotalRequests] = useState(0)
   const [loading, setLoading] = useState(false)
@@ -59,6 +59,11 @@ export default function RoutingTest() {
         setResults({ ...newResults })
         setHistory([...newHistory])
 
+        // Flow 다이어그램 트리거
+        if (onFlowTrigger) {
+          onFlowTrigger(region)
+        }
+
         saveLog({
           type: 'ROUTING',
           status: 'ok',
@@ -83,6 +88,11 @@ export default function RoutingTest() {
 
         setResults({ ...newResults })
         setHistory([...newHistory])
+
+        // Flow 다이어그램 트리거
+        if (onFlowTrigger) {
+          onFlowTrigger(region)
+        }
 
         saveLog({
           type: 'ROUTING',

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef } from 'react'
 import ArchitectureDiagram from './components/ArchitectureDiagram'
 import RoutingTest from './components/RoutingTest'
 import RegionCard from './components/RegionCard'
@@ -6,6 +6,14 @@ import IdcCard from './components/IdcCard'
 import TestLogger from './components/TestLogger'
 
 export default function App() {
+  const diagramRef = useRef(null)
+
+  const handleFlowTrigger = (region) => {
+    if (diagramRef.current) {
+      diagramRef.current.triggerFlow(region)
+    }
+  }
+
   return (
     <div className="dashboard">
       <header className="header">
@@ -16,11 +24,10 @@ export default function App() {
       </header>
 
       <section className="section">
-        <ArchitectureDiagram />
-      </section>
-
-      <section className="section">
-        <RoutingTest />
+        <div className="flow-routing-row">
+          <ArchitectureDiagram ref={diagramRef} compact />
+          <RoutingTest onFlowTrigger={handleFlowTrigger} />
+        </div>
       </section>
 
       <section className="section">

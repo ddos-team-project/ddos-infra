@@ -893,3 +893,72 @@ body {
     align-items: flex-start;
   }
 }
+
+/* Flow + Routing Row Layout */
+.flow-routing-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .flow-routing-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Architecture Diagram Compact Mode */
+.architecture-diagram.compact {
+  padding: 1rem;
+}
+
+.architecture-diagram.compact .diagram-header {
+  margin-bottom: 1rem;
+}
+
+.architecture-diagram.compact .diagram-header h3 {
+  font-size: 1rem;
+}
+
+.architecture-diagram.compact .diagram-container {
+  padding: 1rem;
+}
+
+.architecture-diagram.compact .node {
+  padding: 0.5rem 0.75rem;
+  min-width: 55px;
+}
+
+.architecture-diagram.compact .node-icon {
+  font-size: 1.2rem;
+}
+
+.architecture-diagram.compact .node-label {
+  font-size: 0.7rem;
+}
+
+.architecture-diagram.compact .region-box {
+  padding: 0.75rem;
+}
+
+.architecture-diagram.compact .region-header {
+  font-size: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.architecture-diagram.compact .region-nodes .node {
+  min-width: 45px;
+  padding: 0.4rem 0.5rem;
+}
+
+.architecture-diagram.compact .arrow {
+  font-size: 1.2rem;
+}
+
+.architecture-diagram.compact .arrow-small {
+  font-size: 0.8rem;
+}
+
+.architecture-diagram.compact .arrow-split {
+  font-size: 1rem;
+}

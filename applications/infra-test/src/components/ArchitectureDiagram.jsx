@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useImperativeHandle, forwardRef } from 'react'
 import { saveLog } from './TestLogger'
 import { getApiUrl } from './api'
 
@@ -10,7 +10,7 @@ const NODE_STATUS = {
   error: 'error',
 }
 
-export default function ArchitectureDiagram() {
+const ArchitectureDiagram = forwardRef(function ArchitectureDiagram({ compact = false }, ref) {
   const [nodeStatus, setNodeStatus] = useState({
     client: NODE_STATUS.idle,
     route53: NODE_STATUS.idle,
@@ -27,6 +27,38 @@ export default function ArchitectureDiagram() {
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [latency, setLatency] = useState(null)
+
+  // 외부에서 triggerFlow 함수 노출
+  useImperativeHandle(ref, () => ({
+    triggerFlow: async (region) => {
+      resetNodes()
+      await animateFlowQuick(region)
+    }
+  }))
+
+  // 빠른 애니메이션 (RoutingTest 연동용)
+  const animateFlowQuick = async (targetRegion) => {
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
+
+    setNodeStatus(prev => ({ ...prev, client: NODE_STATUS.active }))
+    await delay(50)
+    setNodeStatus(prev => ({ ...prev, client: NODE_STATUS.success, route53: NODE_STATUS.active }))
+    await delay(50)
+
+    if (targetRegion === 'seoul' || targetRegion?.includes('northeast-2')) {
+      setNodeStatus(prev => ({ ...prev, route53: NODE_STATUS.success, seoulAlb: NODE_STATUS.active }))
+      await delay(50)
+      setNodeStatus(prev => ({ ...prev, seoulAlb: NODE_STATUS.success, seoulEc2: NODE_STATUS.active }))
+      await delay(50)
+      setNodeStatus(prev => ({ ...prev, seoulEc2: NODE_STATUS.success }))
+    } else if (targetRegion === 'tokyo' || targetRegion?.includes('northeast-1')) {
+      setNodeStatus(prev => ({ ...prev, route53: NODE_STATUS.success, tokyoAlb: NODE_STATUS.active }))
+      await delay(50)
+      setNodeStatus(prev => ({ ...prev, tokyoAlb: NODE_STATUS.success, tokyoEc2: NODE_STATUS.active }))
+      await delay(50)
+      setNodeStatus(prev => ({ ...prev, tokyoEc2: NODE_STATUS.success }))
+    }
+  }
 
   const resetNodes = () => {
     setNodeStatus({
@@ -170,20 +202,22 @@ export default function ArchitectureDiagram() {
   }
 
   return (
-    <div className="architecture-diagram">
+    <div className={`architecture-diagram ${compact ? 'compact' : ''}`}>
       <div className="diagram-header">
         <h3>Infrastructure Flow</h3>
-        <div className="diagram-controls">
-          <button onClick={() => runTest('ping')} disabled={loading}>
-            {loading ? 'Testing...' : 'Ping Test'}
-          </button>
-          <button onClick={() => runTest('health')} disabled={loading}>
-            Health Test
-          </button>
-          <button onClick={() => runTest('idc-health')} disabled={loading}>
-            IDC Test
-          </button>
-        </div>
+        {!compact && (
+          <div className="diagram-controls">
+            <button onClick={() => runTest('ping')} disabled={loading}>
+              {loading ? 'Testing...' : 'Ping Test'}
+            </button>
+            <button onClick={() => runTest('health')} disabled={loading}>
+              Health Test
+            </button>
+            <button onClick={() => runTest('idc-health')} disabled={loading}>
+              IDC Test
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="diagram-container">
@@ -243,23 +277,25 @@ export default function ArchitectureDiagram() {
           </div>
         </div>
 
-        <div className="diagram-row idc-row">
-          <div className="idc-connection">
-            <div className={getNodeClass(nodeStatus.vpn)}>
-              <div className="node-icon">🔒</div>
-              <div className="node-label">VPN</div>
-            </div>
-            <div className="arrow">→</div>
-            <div className={getNodeClass(nodeStatus.idc)}>
-              <div className="node-icon">🏢</div>
-              <div className="node-label">IDC</div>
-              <div className="node-detail">192.168.0.10</div>
+        {!compact && (
+          <div className="diagram-row idc-row">
+            <div className="idc-connection">
+              <div className={getNodeClass(nodeStatus.vpn)}>
+                <div className="node-icon">🔒</div>
+                <div className="node-label">VPN</div>
+              </div>
+              <div className="arrow">→</div>
+              <div className={getNodeClass(nodeStatus.idc)}>
+                <div className="node-icon">🏢</div>
+                <div className="node-label">IDC</div>
+                <div className="node-detail">192.168.0.10</div>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {result && (
+      {!compact && result && (
         <div className="diagram-result">
           <div className="result-item">
             <span className="result-label">Routed to:</span>
@@ -295,4 +331,6 @@ export default function ArchitectureDiagram() {
       )}
     </div>
   )
-}
+})
+
+export default ArchitectureDiagram
