@@ -25,7 +25,7 @@ export default function App() {
 
       <section className="section">
         <div className="flow-routing-row">
-          <ArchitectureDiagram ref={diagramRef} compact />
+          <ArchitectureDiagram ref={diagramRef} />
           <RoutingTest onFlowTrigger={handleFlowTrigger} />
         </div>
       </section>

@@ -147,6 +147,7 @@ export default function TestLogger() {
               <span>Time</span>
               <span>Type</span>
               <span>Region</span>
+              <span>Instance</span>
               <span>Status</span>
               <span>Latency</span>
               <span>Details</span>
@@ -160,6 +161,7 @@ export default function TestLogger() {
                     <span>{formatTime(log.timestamp)}</span>
                     <span className="log-type">{log.type}</span>
                     <span>{getRegionFlag(log.region)} {log.az || '-'}</span>
+                    <span className="instance-info">{log.instanceId?.slice(-8) || '-'}</span>
                     <span>{getStatusIcon(log.status)}</span>
                     <span>{log.latency}ms</span>
                     <span className="log-details">{log.details || '-'}</span>

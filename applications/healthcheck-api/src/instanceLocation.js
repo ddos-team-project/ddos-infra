@@ -31,29 +31,59 @@ function imdsRequest(options, timeoutMs) {
   });
 }
 
+async function getImdsToken(timeoutMs = 500) {
+  return await imdsRequest(
+    {
+      method: 'PUT',
+      path: '/latest/api/token',
+      headers: { 'X-aws-ec2-metadata-token-ttl-seconds': '60' },
+    },
+    timeoutMs,
+  );
+}
+
+async function getMetadata(token, path, timeoutMs = 500) {
+  return await imdsRequest(
+    {
+      method: 'GET',
+      path: `/latest/meta-data/${path}`,
+      headers: { 'X-aws-ec2-metadata-token': token },
+    },
+    timeoutMs,
+  );
+}
+
 async function getAz(timeoutMs = 500) {
   if (process.env.INSTANCE_AZ) return process.env.INSTANCE_AZ;
 
   try {
-    const token = await imdsRequest(
-      {
-        method: 'PUT',
-        path: '/latest/api/token',
-        headers: { 'X-aws-ec2-metadata-token-ttl-seconds': '60' },
-      },
-      timeoutMs,
-    );
-
-    const az = await imdsRequest(
-      {
-        method: 'GET',
-        path: '/latest/meta-data/placement/availability-zone',
-        headers: { 'X-aws-ec2-metadata-token': token },
-      },
-      timeoutMs,
-    );
-
+    const token = await getImdsToken(timeoutMs);
+    const az = await getMetadata(token, 'placement/availability-zone', timeoutMs);
     return az || 'unknown';
+  } catch (_) {
+    return 'unknown';
+  }
+}
+
+async function getInstanceId(timeoutMs = 500) {
+  if (process.env.INSTANCE_ID) return process.env.INSTANCE_ID;
+
+  try {
+    const token = await getImdsToken(timeoutMs);
+    const instanceId = await getMetadata(token, 'instance-id', timeoutMs);
+    return instanceId || 'unknown';
+  } catch (_) {
+    return 'unknown';
+  }
+}
+
+async function getPrivateIp(timeoutMs = 500) {
+  if (process.env.PRIVATE_IP) return process.env.PRIVATE_IP;
+
+  try {
+    const token = await getImdsToken(timeoutMs);
+    const privateIp = await getMetadata(token, 'local-ipv4', timeoutMs);
+    return privateIp || 'unknown';
   } catch (_) {
     return 'unknown';
   }
@@ -68,10 +98,14 @@ function deriveRegionFromAz(az) {
 async function getLocation() {
   if (cachedLocation) return cachedLocation;
 
-  const az = await getAz();
+  const [az, instanceId, privateIp] = await Promise.all([
+    getAz(),
+    getInstanceId(),
+    getPrivateIp(),
+  ]);
   const region = process.env.REGION || deriveRegionFromAz(az) || 'local';
 
-  cachedLocation = { region, az };
+  cachedLocation = { region, az, instanceId, privateIp };
 
   return cachedLocation;
 }

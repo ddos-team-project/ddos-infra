@@ -158,6 +158,7 @@ const ArchitectureDiagram = forwardRef(function ArchitectureDiagram({ compact = 
         status: data.status || 'ok',
         region: region,
         az: data.location?.az || data.sourceLocation?.az || '-',
+        instanceId: data.location?.instanceId || data.sourceLocation?.instanceId || '-',
         latency: elapsed,
         details: includeDb ? `DB: ${data.db?.status}` : includeIdc ? `IDC: ${data.idc?.status}` : null,
       })
@@ -305,6 +306,14 @@ const ArchitectureDiagram = forwardRef(function ArchitectureDiagram({ compact = 
             <span className="result-label">Latency:</span>
             <span className="result-value">{latency}ms</span>
           </div>
+          {(result.location?.instanceId || result.sourceLocation?.instanceId) && (
+            <div className="result-item">
+              <span className="result-label">Instance:</span>
+              <span className="result-value instance-info">
+                {(result.location?.instanceId || result.sourceLocation?.instanceId)?.slice(-8)}
+              </span>
+            </div>
+          )}
           <div className="result-item">
             <span className="result-label">Status:</span>
             <span className={`result-value ${result.status === 'ok' ? 'ok' : 'error'}`}>

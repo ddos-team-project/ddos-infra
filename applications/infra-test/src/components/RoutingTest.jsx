@@ -9,6 +9,7 @@ const getApiUrl = () => {
 
 export default function RoutingTest({ onFlowTrigger }) {
   const [results, setResults] = useState({ seoul: 0, tokyo: 0, unknown: 0 })
+  const [instanceStats, setInstanceStats] = useState({})
   const [totalRequests, setTotalRequests] = useState(0)
   const [loading, setLoading] = useState(false)
   const [history, setHistory] = useState([])
@@ -30,10 +31,12 @@ export default function RoutingTest({ onFlowTrigger }) {
   const runMultipleRequests = async (count) => {
     setLoading(true)
     setResults({ seoul: 0, tokyo: 0, unknown: 0 })
+    setInstanceStats({})
     setTotalRequests(count)
     setHistory([])
 
     const newResults = { seoul: 0, tokyo: 0, unknown: 0 }
+    const newInstanceStats = {}
     const newHistory = []
 
     for (let i = 0; i < count; i++) {
@@ -48,15 +51,22 @@ export default function RoutingTest({ onFlowTrigger }) {
 
         newResults[region]++
 
+        const instanceId = data.location?.instanceId || 'unknown'
+        const instanceKey = `${region}-${instanceId}`
+        newInstanceStats[instanceKey] = (newInstanceStats[instanceKey] || 0) + 1
+
         newHistory.push({
           index: i + 1,
           region,
           az: data.location?.az || '-',
+          instanceId: instanceId,
+          privateIp: data.location?.privateIp || '-',
           latency,
           timestamp: new Date().toLocaleTimeString(),
         })
 
         setResults({ ...newResults })
+        setInstanceStats({ ...newInstanceStats })
         setHistory([...newHistory])
 
         // Flow 다이어그램 트리거
@@ -69,6 +79,7 @@ export default function RoutingTest({ onFlowTrigger }) {
           status: 'ok',
           region: data.location?.region || region,
           az: data.location?.az || '-',
+          instanceId: data.location?.instanceId || '-',
           latency,
           details: `${i + 1}/${count}`,
         })
@@ -99,6 +110,7 @@ export default function RoutingTest({ onFlowTrigger }) {
           status: 'error',
           region: '-',
           az: '-',
+          instanceId: '-',
           latency: 0,
           details: error.message,
         })
@@ -196,6 +208,28 @@ export default function RoutingTest({ onFlowTrigger }) {
             <span>총 {results.seoul + results.tokyo + results.unknown} / {totalRequests} 완료</span>
             {loading && <span className="loading-indicator">⏳ 진행 중...</span>}
           </div>
+
+          {Object.keys(instanceStats).length > 0 && (
+            <div className="instance-distribution">
+              <h4>인스턴스 분산</h4>
+              <div className="instance-list">
+                {Object.entries(instanceStats)
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([key, count]) => {
+                    const [region, instanceId] = key.split('-')
+                    const total = results.seoul + results.tokyo + results.unknown
+                    const percent = total > 0 ? Math.round((count / total) * 100) : 0
+                    return (
+                      <div key={key} className={`instance-item ${region}`}>
+                        <span className="instance-region">{region === 'seoul' ? '🇰🇷' : '🇯🇵'}</span>
+                        <span className="instance-id">{instanceId?.slice(-8)}</span>
+                        <span className="instance-count">{count}회 ({percent}%)</span>
+                      </div>
+                    )
+                  })}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -207,6 +241,7 @@ export default function RoutingTest({ onFlowTrigger }) {
               <span>#</span>
               <span>Region</span>
               <span>AZ</span>
+              <span>Instance</span>
               <span>Latency</span>
               <span>Time</span>
             </div>
@@ -216,6 +251,7 @@ export default function RoutingTest({ onFlowTrigger }) {
                   <span>{item.index}</span>
                   <span>{item.region === 'seoul' ? '🇰🇷 Seoul' : item.region === 'tokyo' ? '🇯🇵 Tokyo' : '❓'}</span>
                   <span>{item.az}</span>
+                  <span className="instance-info" title={item.privateIp}>{item.instanceId?.slice(-8) || '-'}</span>
                   <span>{item.latency}ms</span>
                   <span>{item.timestamp}</span>
                 </div>
