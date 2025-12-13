@@ -10,7 +10,7 @@ terraform {
 }
 
 provider "aws" {
-  region  = "ap-northeast-2"
+  region  = "ap-northeast-1"
   # profile = "admin-role"
 }
 
@@ -80,7 +80,7 @@ resource "aws_route53_health_check" "tokyo_alb" {
   failure_threshold = 3
 
   regions = [
-    "ap-northeast-2",
+    "ap-northeast-1",
     "ap-southeast-1",
     "us-west-2"
   ]
