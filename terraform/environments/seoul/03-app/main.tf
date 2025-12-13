@@ -50,16 +50,11 @@ module "healthcheck_api_asg" {
   region_label = "seoul"
   app_env      = "prod"
 
-  db_host            = local.db_host
-  db_name            = "ddos_noncore"
-  db_user            = "admin"
-<<<<<<< HEAD
-  cwagent_ssm_name   = "/prod/ddos/t1/seoul/cloudwatch/config"
+  db_host              = local.db_host
+  db_name              = "ddos_noncore"
+  db_user              = "admin"
+  cwagent_ssm_name     = "/prod/ddos/t1/seoul/cloudwatch/config"
   db_password_ssm_path = "/ddos/aurora/password"
-=======
-  ssm_parameter_name = "/ddos/aurora/password"
-  cwagent_ssm_name   = "/prod/ddos/t1/seoul/cloudwatch/config"
->>>>>>> 173bd2f (feat: 앱 ASG 구조 리팩토링 및 CloudWatch 로그 그룹 모듈 연동)
 
   target_group_arns = [module.healthcheck_api_alb.target_group_arn]
 

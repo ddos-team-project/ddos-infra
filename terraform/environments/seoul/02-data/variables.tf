@@ -124,12 +124,22 @@ variable "kms_key_deletion_window" {
   default     = 7
 }
 
-
 variable "log_groups_by_tier" {
-  description = "log group by"
+  description = "CloudWatch log groups by tier"
   type        = map(list(string))
   default = {
-    t1 = ["api", "auth"]
-    t2 = ["batch", "worker"]
+    db = ["aurora"]
   }
+}
+
+variable "pattern_list" {
+  description = "Metric filter patterns"
+  type        = list(string)
+  default     = ["ERROR", "WARN", "Exception"]
+}
+
+variable "retention_in_days" {
+  description = "CloudWatch log retention days"
+  type        = number
+  default     = 30
 }
