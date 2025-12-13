@@ -1,7 +1,8 @@
 module "tier1_acm_certificate" {
   source = "../../../modules/acm-certificate"
 
-  domain_name     = var.route53_tier1_record
+  domain_name               = var.route53_tier1_record
+  subject_alternative_names = ["*.tier1.ddos.io.kr"]
   route53_zone_id = data.aws_route53_zone.root[0].zone_id
   tags            = local.tags
 }

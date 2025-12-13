@@ -21,3 +21,9 @@ variable "enable_tokyo" {
   type        = bool
   default     = false
 }
+
+variable "api_tier1_wildcard_record" {
+  description = "Tier1 API 와일드카드 레코드(DNS 캐시 우회 테스트용)"
+  type        = string
+  default     = "*.tier1.ddos.io.kr"
+}

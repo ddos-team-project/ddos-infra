@@ -86,6 +86,8 @@ data "template_file" "user_data" {
     db_user            = var.db_user
     ssm_parameter_name = var.ssm_parameter_name
     allow_stress       = var.allow_stress_endpoint
+    idc_host           = var.idc_host
+    idc_port           = var.idc_port
   }
 }
 

@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
 import TestButton from './TestButton'
 import ResponseViewer from './ResponseViewer'
+import { saveLog } from './TestLogger'
+import { getApiUrl } from './api'
 
-const API_URL = 'https://tier1.ddos.io.kr'
 
 function getRegionDisplay(region) {
   if (!region) return { flag: '🌐', name: 'Unknown' }
@@ -29,18 +30,40 @@ export default function IdcCard() {
     const start = performance.now()
 
     try {
-      const response = await fetch(`${API_URL}/idc-health`)
+      const response = await fetch(`${getApiUrl()}/idc-health`)
       const data = await response.json()
 
       console.log('[IDC-HEALTH] Response:', data)
 
-      setLatency(Math.round(performance.now() - start))
+      const elapsed = Math.round(performance.now() - start)
+
+      setLatency(elapsed)
       setResult(data)
+
+      saveLog({
+        type: 'IDC-HEALTH',
+        status: data.status || 'ok',
+        region: data.sourceLocation?.region || '-',
+        az: data.sourceLocation?.az || '-',
+        latency: elapsed,
+        details: data.idc ? `IDC: ${data.idc.status}, VPN: ${data.latencyMs}ms` : null,
+      })
     } catch (error) {
       console.error('[IDC-HEALTH] Error:', error)
 
-      setLatency(Math.round(performance.now() - start))
+      const elapsed = Math.round(performance.now() - start)
+
+      setLatency(elapsed)
       setResult({ error: error.message, status: 'error' })
+
+      saveLog({
+        type: 'IDC-HEALTH',
+        status: 'error',
+        region: '-',
+        az: '-',
+        latency: elapsed,
+        details: error.message,
+      })
     } finally {
       setLoading(false)
     }

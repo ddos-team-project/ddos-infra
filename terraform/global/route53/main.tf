@@ -80,7 +80,7 @@ resource "aws_route53_health_check" "tokyo_alb" {
   failure_threshold = 3
 
   regions = [
-    "ap-northeast-2",
+    "ap-northeast-1",
     "ap-southeast-1",
     "us-west-2"
   ]
@@ -168,6 +168,47 @@ resource "aws_route53_record" "tier2_secondary" {
 
   failover_routing_policy {
     type = "SECONDARY"
+  }
+  health_check_id = aws_route53_health_check.tokyo_alb[0].id
+}
+
+################################################################################
+# Tier1 Wildcard Weighted (DNS 캐시 우회 테스트용)
+################################################################################
+
+resource "aws_route53_record" "tier1_wildcard_seoul" {
+  zone_id        = data.aws_route53_zone.main.zone_id
+  name           = var.api_tier1_wildcard_record
+  type           = "A"
+  set_identifier = "wildcard-seoul"
+
+  alias {
+    name                   = data.terraform_remote_state.seoul_app.outputs.healthcheck_alb_dns_name
+    zone_id                = data.terraform_remote_state.seoul_app.outputs.healthcheck_alb_zone_id
+    evaluate_target_health = true
+  }
+
+  weighted_routing_policy {
+    weight = 80
+  }
+  health_check_id = aws_route53_health_check.seoul_alb.id
+}
+
+resource "aws_route53_record" "tier1_wildcard_tokyo" {
+  count          = var.enable_tokyo ? 1 : 0
+  zone_id        = data.aws_route53_zone.main.zone_id
+  name           = var.api_tier1_wildcard_record
+  type           = "A"
+  set_identifier = "wildcard-tokyo"
+
+  alias {
+    name                   = data.terraform_remote_state.tokyo_app[0].outputs.healthcheck_alb_dns_name
+    zone_id                = data.terraform_remote_state.tokyo_app[0].outputs.healthcheck_alb_zone_id
+    evaluate_target_health = true
+  }
+
+  weighted_routing_policy {
+    weight = 20
   }
   health_check_id = aws_route53_health_check.tokyo_alb[0].id
 }

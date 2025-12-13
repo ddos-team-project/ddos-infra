@@ -13,3 +13,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "subject_alternative_names" {
+  description = "추가 도메인 (SAN)"
+  type        = list(string)
+  default     = []
+}

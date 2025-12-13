@@ -727,3 +727,169 @@ body {
     font-size: 0.7rem;
   }
 }
+
+/* Test Logger */
+.test-logger {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.logger-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+
+.logger-header h3 {
+  font-size: 1.1rem;
+  color: #ccd6f6;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.log-count {
+  font-size: 0.85rem;
+  color: #8892b0;
+  font-weight: normal;
+}
+
+.logger-content {
+  padding: 1.5rem;
+}
+
+.logger-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.filter-buttons button {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  background: transparent;
+  color: #8892b0;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
+}
+
+.filter-buttons button:hover {
+  border-color: rgba(100, 255, 218, 0.3);
+  color: #ccd6f6;
+}
+
+.filter-buttons button.active {
+  background: rgba(100, 255, 218, 0.1);
+  border-color: #64ffda;
+  color: #64ffda;
+}
+
+.clear-btn {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  border-radius: 6px;
+  background: transparent;
+  color: #ff6b6b;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
+}
+
+.clear-btn:hover {
+  background: rgba(255, 107, 107, 0.1);
+}
+
+.log-table {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.log-header {
+  display: grid;
+  grid-template-columns: 80px 80px 120px 60px 70px 1fr;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  color: #8892b0;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.log-body {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.log-row {
+  display: grid;
+  grid-template-columns: 80px 80px 120px 60px 70px 1fr;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  color: #ccd6f6;
+  font-size: 0.8rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.2s ease;
+}
+
+.log-row:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.log-row.ok {
+  border-left: 2px solid #64ffda;
+}
+
+.log-row.error {
+  border-left: 2px solid #ff6b6b;
+  background: rgba(255, 107, 107, 0.05);
+}
+
+.log-type {
+  color: #82aaff;
+  font-weight: 500;
+}
+
+.log-details {
+  color: #8892b0;
+  font-size: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.log-empty {
+  text-align: center;
+  padding: 2rem;
+  color: #8892b0;
+}
+
+@media (max-width: 768px) {
+  .log-header,
+  .log-row {
+    grid-template-columns: 60px 60px 80px 50px 50px 1fr;
+    font-size: 0.7rem;
+    padding: 0.5rem;
+  }
+
+  .logger-controls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

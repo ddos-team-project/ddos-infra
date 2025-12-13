@@ -1,6 +1,11 @@
 import React, { useState } from 'react'
+import { saveLog } from './TestLogger'
 
-const API_URL = 'https://tier1.ddos.io.kr'
+// 랜덤 서브도메인으로 DNS 캐시 우회
+const getApiUrl = () => {
+  const randomId = Math.random().toString(36).slice(2, 10)
+  return `https://${randomId}.tier1.ddos.io.kr`
+}
 
 export default function RoutingTest() {
   const [results, setResults] = useState({ seoul: 0, tokyo: 0, unknown: 0 })
@@ -34,7 +39,8 @@ export default function RoutingTest() {
     for (let i = 0; i < count; i++) {
       try {
         const start = performance.now()
-        const response = await fetch(`${API_URL}/ping`)
+        // 랜덤 서브도메인으로 DNS 캐시 우회
+        const response = await fetch(`${getApiUrl()}/ping`)
         const data = await response.json()
         const latency = Math.round(performance.now() - start)
 
@@ -53,6 +59,15 @@ export default function RoutingTest() {
         setResults({ ...newResults })
         setHistory([...newHistory])
 
+        saveLog({
+          type: 'ROUTING',
+          status: 'ok',
+          region: data.location?.region || region,
+          az: data.location?.az || '-',
+          latency,
+          details: `${i + 1}/${count}`,
+        })
+
         console.log(`[ROUTING ${i + 1}/${count}] Region: ${region}, AZ: ${data.location?.az}`)
       } catch (error) {
         console.error(`[ROUTING ${i + 1}/${count}] Error:`, error)
@@ -68,9 +83,18 @@ export default function RoutingTest() {
 
         setResults({ ...newResults })
         setHistory([...newHistory])
+
+        saveLog({
+          type: 'ROUTING',
+          status: 'error',
+          region: '-',
+          az: '-',
+          latency: 0,
+          details: error.message,
+        })
       }
 
-      await new Promise(resolve => setTimeout(resolve, 100))
+      await new Promise(resolve => setTimeout(resolve, 500))
     }
 
     setLoading(false)

@@ -3,6 +3,7 @@ import ArchitectureDiagram from './components/ArchitectureDiagram'
 import RoutingTest from './components/RoutingTest'
 import RegionCard from './components/RegionCard'
 import IdcCard from './components/IdcCard'
+import TestLogger from './components/TestLogger'
 
 export default function App() {
   return (
@@ -28,6 +29,10 @@ export default function App() {
           <RegionCard />
           <IdcCard />
         </div>
+      </section>
+
+      <section className="section">
+        <TestLogger />
       </section>
     </div>
   )

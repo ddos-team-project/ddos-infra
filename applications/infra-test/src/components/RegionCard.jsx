@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
 import TestButton from './TestButton'
 import ResponseViewer from './ResponseViewer'
+import { saveLog } from './TestLogger'
+import { getApiUrl } from './api'
 
-const API_URL = 'https://tier1.ddos.io.kr'
 
 function getRegionDisplay(region) {
   if (!region) return { flag: '🌐', name: 'Unknown' }
@@ -29,18 +30,40 @@ export default function RegionCard() {
     const start = performance.now()
 
     try {
-      const response = await fetch(`${API_URL}/${endpoint}`)
+      const response = await fetch(`${getApiUrl()}/${endpoint}`)
       const data = await response.json()
 
       console.log(`[${endpoint.toUpperCase()}] Response:`, data)
 
-      setLatency(Math.round(performance.now() - start))
+      const elapsed = Math.round(performance.now() - start)
+
+      setLatency(elapsed)
       setResult(data)
+
+      saveLog({
+        type: endpoint.toUpperCase(),
+        status: data.status || 'ok',
+        region: data.location?.region || '-',
+        az: data.location?.az || '-',
+        latency: elapsed,
+        details: data.db ? `DB: ${data.db.status}` : null,
+      })
     } catch (error) {
       console.error(`[${endpoint.toUpperCase()}] Error:`, error)
 
-      setLatency(Math.round(performance.now() - start))
+      const elapsed = Math.round(performance.now() - start)
+
+      setLatency(elapsed)
       setResult({ error: error.message, status: 'error' })
+
+      saveLog({
+        type: endpoint.toUpperCase(),
+        status: 'error',
+        region: '-',
+        az: '-',
+        latency: elapsed,
+        details: error.message,
+      })
     } finally {
       setLoading(prev => ({ ...prev, [endpoint]: false }))
     }
@@ -58,7 +81,7 @@ export default function RegionCard() {
       </div>
 
       <div className="endpoint-info">
-        Endpoint: {API_URL}
+        Endpoint: tier1.ddos.io.kr
       </div>
 
       <div className="buttons-row">

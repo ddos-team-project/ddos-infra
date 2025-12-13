@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
+import { saveLog } from './TestLogger'
+import { getApiUrl } from './api'
 
-const API_URL = 'https://tier1.ddos.io.kr'
 
 const NODE_STATUS = {
   idle: 'idle',
@@ -106,7 +107,7 @@ export default function ArchitectureDiagram() {
     const start = performance.now()
 
     try {
-      const response = await fetch(`${API_URL}/${endpoint}`)
+      const response = await fetch(`${getApiUrl()}/${endpoint}`)
       const data = await response.json()
 
       const elapsed = Math.round(performance.now() - start)
@@ -120,9 +121,27 @@ export default function ArchitectureDiagram() {
       const includeDb = endpoint === 'health' && data.db
       const includeIdc = endpoint === 'idc-health'
 
+      saveLog({
+        type: endpoint.toUpperCase(),
+        status: data.status || 'ok',
+        region: region,
+        az: data.location?.az || data.sourceLocation?.az || '-',
+        latency: elapsed,
+        details: includeDb ? `DB: ${data.db?.status}` : includeIdc ? `IDC: ${data.idc?.status}` : null,
+      })
+
       await animateFlow(region, includeDb, includeIdc)
     } catch (error) {
       console.error(`[ARCHITECTURE] ${endpoint.toUpperCase()} Error:`, error)
+
+      saveLog({
+        type: endpoint.toUpperCase(),
+        status: 'error',
+        region: '-',
+        az: '-',
+        latency: Math.round(performance.now() - start),
+        details: error.message,
+      })
 
       setResult({ error: error.message, status: 'error' })
     } finally {
