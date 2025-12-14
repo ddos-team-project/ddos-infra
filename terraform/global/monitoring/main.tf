@@ -6,6 +6,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    archive = {
+      source  = "hashicorp/archive"
+      version = "~> 2.4"
+    }
   }
 }
 
@@ -21,6 +25,34 @@ data "terraform_remote_state" "seoul_app" {
   config = {
     bucket         = "diehard-ddos-tf-state-lock"
     key            = "seoul/03-app/healthcheck-api.tfstate"
+    region         = "ap-northeast-2"
+    dynamodb_table = "terraform-lock-table"
+    encrypt        = true
+  }
+}
+
+###############################
+# Seoul 02-data Remote State
+###############################
+data "terraform_remote_state" "seoul_data" {
+  backend = "s3"
+  config = {
+    bucket         = "diehard-ddos-tf-state-lock"
+    key            = "seoul/02-data/terraform.tfstate"
+    region         = "ap-northeast-2"
+    dynamodb_table = "terraform-lock-table"
+    encrypt        = true
+  }
+}
+
+###############################
+# Tokyo 02-data Remote State
+###############################
+data "terraform_remote_state" "tokyo_data" {
+  backend = "s3"
+  config = {
+    bucket         = "diehard-ddos-tf-state-lock"
+    key            = "tokyo/02-data/terraform.tfstate"
     region         = "ap-northeast-2"
     dynamodb_table = "terraform-lock-table"
     encrypt        = true
@@ -49,4 +81,18 @@ locals {
   # Tokyo
   tokyo_alb_suffix = data.terraform_remote_state.tokyo_app.outputs.healthcheck_alb_suffix
   tokyo_asg_name   = data.terraform_remote_state.tokyo_app.outputs.healthcheck_asg_name
+
+  # Aurora clusters
+  seoul_cluster_id = try(data.terraform_remote_state.seoul_data.outputs.cluster_id, null)
+  tokyo_cluster_id = try(data.terraform_remote_state.tokyo_data.outputs.cluster_id, null)
+
+  # Custom metric settings
+  metric_namespace        = var.metric_namespace
+  metric_dimension_system = "dr"
+  writer_region_primary   = var.writer_primary_region
+  writer_region_secondary = var.writer_secondary_region
+  writer_region_value_map = {
+    primary   = var.writer_primary_value
+    secondary = var.writer_secondary_value
+  }
 }
