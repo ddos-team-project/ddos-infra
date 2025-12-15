@@ -158,6 +158,17 @@ resource "aws_autoscaling_group" "this" {
   health_check_type         = "ELB"
   health_check_grace_period = 60
 
+  # ASG 메트릭 수집 활성화 (CloudWatch 대시보드용)
+  enabled_metrics = [
+    "GroupDesiredCapacity",
+    "GroupInServiceInstances",
+    "GroupPendingInstances",
+    "GroupTerminatingInstances",
+    "GroupTotalInstances",
+    "GroupMinSize",
+    "GroupMaxSize"
+  ]
+
   launch_template {
     id      = aws_launch_template.this.id
     version = "$Latest"
