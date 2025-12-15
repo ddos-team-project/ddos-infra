@@ -8,14 +8,14 @@ resource "aws_cloudwatch_dashboard" "asg_load_test" {
         type = "metric",
         x    = 0, y = 0, width = 12, height = 6,
         properties = {
-          title  = "ASG Instance Count (Seoul)"
+          title  = "ASG 인스턴스 수 (서울)"
           view   = "timeSeries"
           region = "ap-northeast-2"
           metrics = [
-            ["AWS/AutoScaling", "GroupDesiredCapacity", "AutoScalingGroupName", module.healthcheck_api_asg.autoscaling_group_name, { "color" : "#2ca02c", "label" : "Desired" }],
-            [".", "GroupInServiceInstances", ".", ".", { "color" : "#1f77b4", "label" : "InService" }],
-            [".", "GroupPendingInstances", ".", ".", { "color" : "#ff7f0e", "label" : "Pending" }],
-            [".", "GroupTerminatingInstances", ".", ".", { "color" : "#d62728", "label" : "Terminating" }]
+            ["AWS/AutoScaling", "GroupDesiredCapacity", "AutoScalingGroupName", module.healthcheck_api_asg.autoscaling_group_name, { "color" : "#2ca02c", "label" : "목표" }],
+            [".", "GroupInServiceInstances", ".", ".", { "color" : "#1f77b4", "label" : "실행중" }],
+            [".", "GroupPendingInstances", ".", ".", { "color" : "#ff7f0e", "label" : "대기중" }],
+            [".", "GroupTerminatingInstances", ".", ".", { "color" : "#d62728", "label" : "종료중" }]
           ]
           period = 60
           stat   = "Average"
@@ -28,14 +28,14 @@ resource "aws_cloudwatch_dashboard" "asg_load_test" {
         type = "metric",
         x    = 12, y = 0, width = 12, height = 6,
         properties = {
-          title  = "ASG Instance Count (Tokyo)"
+          title  = "ASG 인스턴스 수 (도쿄)"
           view   = "timeSeries"
           region = "ap-northeast-1"
           metrics = [
-            ["AWS/AutoScaling", "GroupDesiredCapacity", "AutoScalingGroupName", "healthcheck-api-tokyo-asg", { "color" : "#2ca02c", "label" : "Desired", "region" : "ap-northeast-1" }],
-            [".", "GroupInServiceInstances", ".", ".", { "color" : "#1f77b4", "label" : "InService", "region" : "ap-northeast-1" }],
-            [".", "GroupPendingInstances", ".", ".", { "color" : "#ff7f0e", "label" : "Pending", "region" : "ap-northeast-1" }],
-            [".", "GroupTerminatingInstances", ".", ".", { "color" : "#d62728", "label" : "Terminating", "region" : "ap-northeast-1" }]
+            ["AWS/AutoScaling", "GroupDesiredCapacity", "AutoScalingGroupName", "healthcheck-api-tokyo-asg", { "color" : "#2ca02c", "label" : "목표", "region" : "ap-northeast-1" }],
+            [".", "GroupInServiceInstances", ".", ".", { "color" : "#1f77b4", "label" : "실행중", "region" : "ap-northeast-1" }],
+            [".", "GroupPendingInstances", ".", ".", { "color" : "#ff7f0e", "label" : "대기중", "region" : "ap-northeast-1" }],
+            [".", "GroupTerminatingInstances", ".", ".", { "color" : "#d62728", "label" : "종료중", "region" : "ap-northeast-1" }]
           ]
           period = 60
           stat   = "Average"
@@ -49,17 +49,17 @@ resource "aws_cloudwatch_dashboard" "asg_load_test" {
         type = "metric",
         x    = 0, y = 6, width = 12, height = 6,
         properties = {
-          title  = "ASG CPU Utilization (Seoul)"
+          title  = "CPU 사용률 (서울)"
           view   = "timeSeries"
           region = "ap-northeast-2"
           metrics = [
-            ["AWS/EC2", "CPUUtilization", "AutoScalingGroupName", module.healthcheck_api_asg.autoscaling_group_name, { "stat" : "Average", "label" : "Avg CPU" }],
-            ["...", { "stat" : "Maximum", "label" : "Max CPU", "color" : "#d62728" }]
+            ["AWS/EC2", "CPUUtilization", "AutoScalingGroupName", module.healthcheck_api_asg.autoscaling_group_name, { "stat" : "Average", "label" : "평균" }],
+            ["...", { "stat" : "Maximum", "label" : "최대", "color" : "#d62728" }]
           ]
           period = 60
           annotations = {
             horizontal = [
-              { "label" : "Scale Out Threshold", "value" : 70, "color" : "#ff7f0e" }
+              { "label" : "스케일 아웃 임계값", "value" : 70, "color" : "#ff7f0e" }
             ]
           }
           yAxis = {
@@ -71,17 +71,17 @@ resource "aws_cloudwatch_dashboard" "asg_load_test" {
         type = "metric",
         x    = 12, y = 6, width = 12, height = 6,
         properties = {
-          title  = "ASG CPU Utilization (Tokyo)"
+          title  = "CPU 사용률 (도쿄)"
           view   = "timeSeries"
           region = "ap-northeast-1"
           metrics = [
-            ["AWS/EC2", "CPUUtilization", "AutoScalingGroupName", "healthcheck-api-tokyo-asg", { "stat" : "Average", "label" : "Avg CPU", "region" : "ap-northeast-1" }],
-            ["...", { "stat" : "Maximum", "label" : "Max CPU", "color" : "#d62728", "region" : "ap-northeast-1" }]
+            ["AWS/EC2", "CPUUtilization", "AutoScalingGroupName", "healthcheck-api-tokyo-asg", { "stat" : "Average", "label" : "평균", "region" : "ap-northeast-1" }],
+            ["...", { "stat" : "Maximum", "label" : "최대", "color" : "#d62728", "region" : "ap-northeast-1" }]
           ]
           period = 60
           annotations = {
             horizontal = [
-              { "label" : "Scale Out Threshold", "value" : 70, "color" : "#ff7f0e" }
+              { "label" : "스케일 아웃 임계값", "value" : 70, "color" : "#ff7f0e" }
             ]
           }
           yAxis = {
@@ -94,12 +94,12 @@ resource "aws_cloudwatch_dashboard" "asg_load_test" {
         type = "metric",
         x    = 0, y = 12, width = 12, height = 6,
         properties = {
-          title  = "ALB Request Count (Seoul/Tokyo)"
+          title  = "ALB 요청 수 (서울/도쿄)"
           view   = "timeSeries"
           region = "ap-northeast-2"
           metrics = [
-            ["AWS/ApplicationELB", "RequestCount", "LoadBalancer", local.alb_suffixes.seoul, { "stat" : "Sum", "label" : "Seoul RPS" }],
-            [".", "RequestCount", "LoadBalancer", local.alb_suffixes.tokyo, { "stat" : "Sum", "label" : "Tokyo RPS", "region" : "ap-northeast-1" }]
+            ["AWS/ApplicationELB", "RequestCount", "LoadBalancer", local.alb_suffixes.seoul, { "stat" : "Sum", "label" : "서울" }],
+            [".", "RequestCount", "LoadBalancer", local.alb_suffixes.tokyo, { "stat" : "Sum", "label" : "도쿄", "region" : "ap-northeast-1" }]
           ]
           period = 60
         }
@@ -108,7 +108,7 @@ resource "aws_cloudwatch_dashboard" "asg_load_test" {
         type = "metric",
         x    = 12, y = 12, width = 12, height = 6,
         properties = {
-          title  = "ALB Response Time P50/P95/P99 (Seoul)"
+          title  = "응답 시간 P50/P95/P99 (서울)"
           view   = "timeSeries"
           region = "ap-northeast-2"
           metrics = [
@@ -124,12 +124,12 @@ resource "aws_cloudwatch_dashboard" "asg_load_test" {
         type = "metric",
         x    = 0, y = 18, width = 12, height = 6,
         properties = {
-          title  = "Target Group Health (Seoul)"
+          title  = "타겟 그룹 상태 (서울)"
           view   = "timeSeries"
           region = "ap-northeast-2"
           metrics = [
-            ["AWS/ApplicationELB", "HealthyHostCount", "LoadBalancer", local.alb_suffixes.seoul, "TargetGroup", local.tg_suffix, { "color" : "#2ca02c", "label" : "Healthy" }],
-            [".", "UnHealthyHostCount", ".", ".", ".", ".", { "color" : "#d62728", "label" : "Unhealthy" }]
+            ["AWS/ApplicationELB", "HealthyHostCount", "LoadBalancer", local.alb_suffixes.seoul, "TargetGroup", local.tg_suffix, { "color" : "#2ca02c", "label" : "정상" }],
+            [".", "UnHealthyHostCount", ".", ".", ".", ".", { "color" : "#d62728", "label" : "비정상" }]
           ]
           period = 60
           stat   = "Average"
@@ -142,12 +142,12 @@ resource "aws_cloudwatch_dashboard" "asg_load_test" {
         type = "metric",
         x    = 12, y = 18, width = 12, height = 6,
         properties = {
-          title  = "ALB Connections (Seoul)"
+          title  = "ALB 연결 수 (서울)"
           view   = "timeSeries"
           region = "ap-northeast-2"
           metrics = [
-            ["AWS/ApplicationELB", "ActiveConnectionCount", "LoadBalancer", local.alb_suffixes.seoul, { "label" : "Active" }],
-            [".", "NewConnectionCount", ".", ".", { "label" : "New", "color" : "#ff7f0e" }]
+            ["AWS/ApplicationELB", "ActiveConnectionCount", "LoadBalancer", local.alb_suffixes.seoul, { "label" : "활성" }],
+            [".", "NewConnectionCount", ".", ".", { "label" : "신규", "color" : "#ff7f0e" }]
           ]
           period = 60
           stat   = "Sum"
@@ -158,13 +158,13 @@ resource "aws_cloudwatch_dashboard" "asg_load_test" {
         type = "metric",
         x    = 0, y = 24, width = 12, height = 6,
         properties = {
-          title  = "HTTP Status Codes (Seoul)"
+          title  = "HTTP 상태 코드 (서울)"
           view   = "timeSeries"
           region = "ap-northeast-2"
           metrics = [
-            ["AWS/ApplicationELB", "HTTPCode_Target_2XX_Count", "LoadBalancer", local.alb_suffixes.seoul, { "color" : "#2ca02c", "label" : "2XX" }],
-            [".", "HTTPCode_Target_4XX_Count", ".", ".", { "color" : "#ff7f0e", "label" : "4XX" }],
-            [".", "HTTPCode_Target_5XX_Count", ".", ".", { "color" : "#d62728", "label" : "5XX" }]
+            ["AWS/ApplicationELB", "HTTPCode_Target_2XX_Count", "LoadBalancer", local.alb_suffixes.seoul, { "color" : "#2ca02c", "label" : "2XX 성공" }],
+            [".", "HTTPCode_Target_4XX_Count", ".", ".", { "color" : "#ff7f0e", "label" : "4XX 클라이언트 에러" }],
+            [".", "HTTPCode_Target_5XX_Count", ".", ".", { "color" : "#d62728", "label" : "5XX 서버 에러" }]
           ]
           period = 60
           stat   = "Sum"
@@ -174,13 +174,13 @@ resource "aws_cloudwatch_dashboard" "asg_load_test" {
         type = "metric",
         x    = 12, y = 24, width = 12, height = 6,
         properties = {
-          title  = "HTTP Status Codes (Tokyo)"
+          title  = "HTTP 상태 코드 (도쿄)"
           view   = "timeSeries"
           region = "ap-northeast-1"
           metrics = [
-            ["AWS/ApplicationELB", "HTTPCode_Target_2XX_Count", "LoadBalancer", local.alb_suffixes.tokyo, { "color" : "#2ca02c", "label" : "2XX", "region" : "ap-northeast-1" }],
-            [".", "HTTPCode_Target_4XX_Count", ".", ".", { "color" : "#ff7f0e", "label" : "4XX", "region" : "ap-northeast-1" }],
-            [".", "HTTPCode_Target_5XX_Count", ".", ".", { "color" : "#d62728", "label" : "5XX", "region" : "ap-northeast-1" }]
+            ["AWS/ApplicationELB", "HTTPCode_Target_2XX_Count", "LoadBalancer", local.alb_suffixes.tokyo, { "color" : "#2ca02c", "label" : "2XX 성공", "region" : "ap-northeast-1" }],
+            [".", "HTTPCode_Target_4XX_Count", ".", ".", { "color" : "#ff7f0e", "label" : "4XX 클라이언트 에러", "region" : "ap-northeast-1" }],
+            [".", "HTTPCode_Target_5XX_Count", ".", ".", { "color" : "#d62728", "label" : "5XX 서버 에러", "region" : "ap-northeast-1" }]
           ]
           period = 60
           stat   = "Sum"
@@ -191,12 +191,12 @@ resource "aws_cloudwatch_dashboard" "asg_load_test" {
         type = "metric",
         x    = 0, y = 30, width = 12, height = 6,
         properties = {
-          title  = "Network Traffic (Seoul ASG)"
+          title  = "네트워크 트래픽 (서울)"
           view   = "timeSeries"
           region = "ap-northeast-2"
           metrics = [
-            ["AWS/EC2", "NetworkIn", "AutoScalingGroupName", module.healthcheck_api_asg.autoscaling_group_name, { "label" : "Network In (bytes)" }],
-            [".", "NetworkOut", ".", ".", { "label" : "Network Out (bytes)", "color" : "#ff7f0e" }]
+            ["AWS/EC2", "NetworkIn", "AutoScalingGroupName", module.healthcheck_api_asg.autoscaling_group_name, { "label" : "수신 (bytes)" }],
+            [".", "NetworkOut", ".", ".", { "label" : "송신 (bytes)", "color" : "#ff7f0e" }]
           ]
           period = 60
           stat   = "Sum"
@@ -206,12 +206,12 @@ resource "aws_cloudwatch_dashboard" "asg_load_test" {
         type = "metric",
         x    = 12, y = 30, width = 12, height = 6,
         properties = {
-          title  = "Network Traffic (Tokyo ASG)"
+          title  = "네트워크 트래픽 (도쿄)"
           view   = "timeSeries"
           region = "ap-northeast-1"
           metrics = [
-            ["AWS/EC2", "NetworkIn", "AutoScalingGroupName", "healthcheck-api-tokyo-asg", { "label" : "Network In (bytes)", "region" : "ap-northeast-1" }],
-            [".", "NetworkOut", ".", ".", { "label" : "Network Out (bytes)", "color" : "#ff7f0e", "region" : "ap-northeast-1" }]
+            ["AWS/EC2", "NetworkIn", "AutoScalingGroupName", "healthcheck-api-tokyo-asg", { "label" : "수신 (bytes)", "region" : "ap-northeast-1" }],
+            [".", "NetworkOut", ".", ".", { "label" : "송신 (bytes)", "color" : "#ff7f0e", "region" : "ap-northeast-1" }]
           ]
           period = 60
           stat   = "Sum"
