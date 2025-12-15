@@ -19,6 +19,9 @@ if ! command -v aws &>/dev/null; then
   sudo dnf install -y awscli
 fi
 
+# Apache Bench 설치 (부하 테스트용)
+sudo dnf install -y httpd-tools
+
 # ECR 로그인
 aws ecr get-login-password --region ${aws_region} \
   | docker login --username AWS --password-stdin ${image_uri_registry}
