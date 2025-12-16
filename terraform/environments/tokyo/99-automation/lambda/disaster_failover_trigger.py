@@ -20,7 +20,7 @@ def lambda_handler(event, context):
     document_name = os.environ.get('SSM_DOCUMENT_NAME', 'Aurora-Disaster-Failover-Runbook-Tokyo')
     automation_role_arn = os.environ.get('AUTOMATION_ROLE_ARN', '')
 
-    # 기본 파라미터 (런북의 기본값 사용)
+    # 기본 파라미터 (긴급 상황 가정 - 스냅샷 생성 건너뜀)
     parameters = {
         'GlobalClusterIdentifier': ['dh-prod-global-rds-v2'],
         'LocalClusterRegion': ['ap-northeast-1'],
@@ -28,7 +28,7 @@ def lambda_handler(event, context):
         'FailedRegion': ['ap-northeast-2'],
         'FailedRegionName': ['Seoul'],
         'IncidentNumber': [f'INC-{datetime.now().strftime("%Y%m%d%H%M%S")}'],
-        'SkipSnapshot': ['false']
+        'SkipSnapshot': ['true']
     }
 
     # AutomationAssumeRole 설정
