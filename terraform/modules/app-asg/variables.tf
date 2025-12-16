@@ -92,7 +92,7 @@ variable "enable_target_tracking" {
 variable "target_cpu_utilization" {
   description = "타깃 추적용 평균 CPU 사용률 목표(%)"
   type        = number
-  default     = 60
+  default     = 50
 }
 
 variable "estimated_instance_warmup" {
