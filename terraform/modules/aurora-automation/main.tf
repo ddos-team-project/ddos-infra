@@ -39,7 +39,9 @@ resource "aws_iam_policy" "ssm_automation_policy" {
           "rds:DescribeGlobalClusters",
           "rds:DescribeDBClusters",
           "rds:CreateDBClusterSnapshot",
-          "rds:DescribeDBClusterSnapshots"
+          "rds:DescribeDBClusterSnapshots",
+          "rds:AddTagsToResource",
+          "rds:ModifyDBCluster"
         ],
         Resource = "*"
       },
