@@ -1,0 +1,102 @@
+description: "[TEST] Disaster Failover API 테스트용 더미 런북. 실제 DB 작업 없이 API 플로우만 검증합니다."
+schemaVersion: "0.3"
+assumeRole: "{{ AutomationAssumeRole }}"
+
+parameters:
+  GlobalClusterIdentifier:
+    type: String
+    description: "(테스트) Aurora Global Cluster ID"
+    default: "dh-prod-global-rds-v2"
+  LocalClusterRegion:
+    type: String
+    description: "(테스트) Tokyo 리전"
+    default: "ap-northeast-1"
+  LocalClusterIdentifier:
+    type: String
+    description: "(테스트) Tokyo 클러스터 ID"
+    default: "dh-prod-db-tokyo-aurora-secondary-v2"
+  FailedRegion:
+    type: String
+    description: "(테스트) 장애 발생 리전"
+    default: "ap-northeast-2"
+  FailedRegionName:
+    type: String
+    description: "(테스트) 장애 발생 리전명"
+    default: "Seoul"
+  IncidentNumber:
+    type: String
+    description: "(테스트) 장애 관리 번호"
+    default: "TEST-000"
+  SkipSnapshot:
+    type: String
+    description: "(테스트) 스냅샷 생성 건너뛰기"
+    default: "false"
+    allowedValues:
+      - "true"
+      - "false"
+  AutomationAssumeRole:
+    type: String
+    description: "(선택) Automation 실행 IAM Role ARN"
+    default: ""
+
+mainSteps:
+  - name: LogTestStart
+    action: aws:executeAwsApi
+    description: "[TEST] 테스트 시작 로그 기록"
+    inputs:
+      Service: cloudwatch
+      Api: PutMetricData
+      Namespace: "Aurora/DisasterTest"
+      MetricData:
+        - MetricName: "TestExecutionStarted"
+          Value: 1
+          Unit: "Count"
+          Dimensions:
+            - Name: "Environment"
+              Value: "Test"
+            - Name: "Region"
+              Value: "Tokyo"
+
+  - name: SimulateClusterCheck
+    action: aws:sleep
+    description: "[TEST] 클러스터 상태 확인 시뮬레이션 (2초 대기)"
+    inputs:
+      Duration: PT2S
+
+  - name: LogParametersReceived
+    action: aws:executeAwsApi
+    description: "[TEST] 수신된 파라미터 기록"
+    inputs:
+      Service: ssm
+      Api: PutParameter
+      Name: "/ddos/disaster-failover/test-log-{{ global:DATE_TIME }}"
+      Value: "TEST RUN - GlobalCluster: {{ GlobalClusterIdentifier }}, LocalCluster: {{ LocalClusterIdentifier }}, FailedRegion: {{ FailedRegionName }}, Incident: {{ IncidentNumber }}, SkipSnapshot: {{ SkipSnapshot }}"
+      Type: "String"
+      Overwrite: true
+      Description: "Disaster Failover Test Run Log"
+
+  - name: SimulateFailoverProcess
+    action: aws:sleep
+    description: "[TEST] 페일오버 프로세스 시뮬레이션 (3초 대기)"
+    inputs:
+      Duration: PT3S
+
+  - name: LogTestComplete
+    action: aws:executeAwsApi
+    description: "[TEST] 테스트 완료 로그 기록"
+    inputs:
+      Service: cloudwatch
+      Api: PutMetricData
+      Namespace: "Aurora/DisasterTest"
+      MetricData:
+        - MetricName: "TestExecutionCompleted"
+          Value: 1
+          Unit: "Count"
+          Dimensions:
+            - Name: "Environment"
+              Value: "Test"
+            - Name: "Region"
+              Value: "Tokyo"
+            - Name: "IncidentNumber"
+              Value: "{{ IncidentNumber }}"
+
