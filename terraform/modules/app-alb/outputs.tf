@@ -22,3 +22,14 @@ output "alb_sg_id" {
   description = "ALB 보안 그룹 ID 목록"
   value       = var.alb_sg_ids
 }
+
+# ALB Request Count 스케일링 정책용 ARN suffix
+output "alb_arn_suffix" {
+  description = "ALB ARN suffix (스케일링 정책용)"
+  value       = aws_lb.this.arn_suffix
+}
+
+output "target_group_arn_suffix" {
+  description = "Target Group ARN suffix (스케일링 정책용)"
+  value       = aws_lb_target_group.this.arn_suffix
+}
