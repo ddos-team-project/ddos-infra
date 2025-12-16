@@ -47,8 +47,12 @@ resource "aws_iam_policy" "ssm_automation_policy" {
       },
       # SSM Parameter 수정 권한
       {
-        Effect   = "Allow",
-        Action   = ["ssm:PutParameter", "ssm:GetParameter"],
+        Effect = "Allow",
+        Action = [
+          "ssm:PutParameter",
+          "ssm:GetParameter",
+          "ssm:AddTagsToResource"
+        ],
         Resource = "arn:aws:ssm:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:parameter/*"
       },
       # CloudWatch 권한
