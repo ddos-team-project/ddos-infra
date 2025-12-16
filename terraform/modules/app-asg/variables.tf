@@ -90,7 +90,7 @@ variable "enable_target_tracking" {
 }
 
 variable "target_cpu_utilization" {
-  description = "타깃 추적용 평균 CPU 사용률 목표(%)"
+  description = "타깃 추적용 평균 CPU 사용률 목표(%) - 금융권 권장 40~50%"
   type        = number
   default     = 50
 }
@@ -187,4 +187,44 @@ variable "idc_port" {
 variable "cwagent_ssm_name" {
   description = "SSM parameter name containing CloudWatch Agent config"
   type        = string
+}
+
+# ============================================
+# 금융권 표준 스케일링 설정
+# ============================================
+
+variable "health_check_grace_period" {
+  description = "ASG 헬스체크 유예 시간(초) - 금융권 권장 300초 이상"
+  type        = number
+  default     = 300
+}
+
+variable "disable_scale_in" {
+  description = "Scale-In 비활성화 여부 (금융권 보수적 운영용)"
+  type        = bool
+  default     = false
+}
+
+variable "enable_alb_request_scaling" {
+  description = "ALB 요청 수 기반 Target Tracking 활성화"
+  type        = bool
+  default     = false
+}
+
+variable "alb_arn_suffix" {
+  description = "ALB ARN suffix (ALB 요청 수 스케일링용)"
+  type        = string
+  default     = ""
+}
+
+variable "target_group_arn_suffix" {
+  description = "Target Group ARN suffix (ALB 요청 수 스케일링용)"
+  type        = string
+  default     = ""
+}
+
+variable "target_requests_per_target" {
+  description = "타깃당 요청 수 목표값 - 부하테스트 결과의 70~80% 권장"
+  type        = number
+  default     = 1000
 }

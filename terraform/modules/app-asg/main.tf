@@ -156,7 +156,7 @@ resource "aws_autoscaling_group" "this" {
   desired_capacity          = var.desired_capacity
   vpc_zone_identifier       = var.app_subnet_ids
   health_check_type         = "ELB"
-  health_check_grace_period = 300
+  health_check_grace_period = var.health_check_grace_period
 
   # ASG 메트릭 수집 활성화 (CloudWatch 대시보드용)
   enabled_metrics = [
@@ -211,9 +211,29 @@ resource "aws_autoscaling_policy" "cpu_target_tracking" {
     }
 
     target_value     = var.target_cpu_utilization
-    disable_scale_in = false
+    disable_scale_in = var.disable_scale_in
   }
 }
+
+# ALB 요청 수 기반 타깃 추적 오토스케일링 (금융권 권장)
+resource "aws_autoscaling_policy" "alb_request_tracking" {
+  count                     = var.enable_alb_request_scaling ? 1 : 0
+  name                      = "${var.name}-alb-request-tracking"
+  autoscaling_group_name    = aws_autoscaling_group.this.name
+  estimated_instance_warmup = var.estimated_instance_warmup
+  policy_type               = "TargetTrackingScaling"
+
+  target_tracking_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ALBRequestCountPerTarget"
+      resource_label         = "${var.alb_arn_suffix}/${var.target_group_arn_suffix}"
+    }
+
+    target_value     = var.target_requests_per_target
+    disable_scale_in = var.disable_scale_in
+  }
+}
+
 data "aws_ami" "amazon_linux_2023" {
   count       = var.ami_id == null ? 1 : 0
   most_recent = true
