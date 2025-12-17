@@ -19,5 +19,5 @@ variable "api_tier2_record" {
 variable "enable_tokyo" {
   description = "도쿄 리전을 활성화해 가중치/페일오버에 포함할지 여부"
   type        = bool
-  default     = false
+  default     = true
 }

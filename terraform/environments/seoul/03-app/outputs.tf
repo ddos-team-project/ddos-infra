@@ -22,3 +22,8 @@ output "healthcheck_asg_name" {
   description = "Healthcheck API ASG name"
   value       = module.healthcheck_api_asg.autoscaling_group_name
 }
+
+output "healthcheck_tg_suffix" {
+  description = "서울 ALB 타겟 그룹 식별자 (CloudWatch 메트릭용)"
+  value       = local.tg_suffix
+}

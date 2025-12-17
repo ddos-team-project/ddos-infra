@@ -4,6 +4,18 @@ variable "metric_namespace" {
   default     = "DR/Health"
 }
 
+variable "seoul_healthcheck_id" {
+  description = "서울 ALB Route53 헬스체크 ID"
+  type        = string
+  default     = "f6f74063-271b-44cf-b3dd-2c20d90efba6"
+}
+
+variable "tokyo_healthcheck_id" {
+  description = "도쿄 ALB Route53 헬스체크 ID"
+  type        = string
+  default     = "29ee2bfd-7678-474f-b6ee-d421c9712eae"
+}
+
 variable "dr_metrics_schedule" {
   description = "Schedule expression for DR writer/Route53 metric publisher"
   type        = string

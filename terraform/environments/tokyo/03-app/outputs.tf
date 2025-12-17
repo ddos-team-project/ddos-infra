@@ -24,6 +24,6 @@ output "healthcheck_asg_name" {
 }
 
 output "healthcheck_tg_suffix" {
-  description = "Healthcheck API Target Group suffix for CloudWatch metrics"
-  value       = local.tg_suffix
+  description = "도쿄 ALB 타겟 그룹 식별자 (CloudWatch 메트릭용)"
+  value       = "targetgroup/${local.tg_suffix}"
 }

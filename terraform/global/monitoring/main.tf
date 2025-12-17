@@ -73,18 +73,25 @@ data "terraform_remote_state" "tokyo_app" {
   }
 }
 
+
 locals {
   # Seoul
   seoul_alb_suffix = data.terraform_remote_state.seoul_app.outputs.healthcheck_alb_suffix
   seoul_asg_name   = data.terraform_remote_state.seoul_app.outputs.healthcheck_asg_name
+  seoul_tg_suffix  = data.terraform_remote_state.seoul_app.outputs.healthcheck_tg_suffix
 
   # Tokyo
   tokyo_alb_suffix = data.terraform_remote_state.tokyo_app.outputs.healthcheck_alb_suffix
   tokyo_asg_name   = data.terraform_remote_state.tokyo_app.outputs.healthcheck_asg_name
+  tokyo_tg_suffix  = data.terraform_remote_state.tokyo_app.outputs.healthcheck_tg_suffix
 
   # Aurora clusters
   seoul_cluster_id = try(data.terraform_remote_state.seoul_data.outputs.cluster_id, null)
   tokyo_cluster_id = try(data.terraform_remote_state.tokyo_data.outputs.cluster_id, null)
+
+  # Route53 Health Check IDs
+  seoul_healthcheck_id = var.seoul_healthcheck_id
+  tokyo_healthcheck_id = var.tokyo_healthcheck_id
 
   # Custom metric settings
   metric_namespace        = var.metric_namespace
