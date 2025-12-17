@@ -8,12 +8,14 @@ locals {
   app_subnet_ids = data.terraform_remote_state.network.outputs.app_subnets
   alb_subnet_ids = data.terraform_remote_state.network.outputs.public_subnets
 
-  alb_suffix_tokyo = var.alb_suffix_tokyo
+  alb_suffix_tokyo = try(data.terraform_remote_state.tokyo_app.outputs.healthcheck_alb_suffix, var.alb_suffix_tokyo)
 
   alb_suffixes = {
     seoul = local.alb_suffix
     tokyo = local.alb_suffix_tokyo
   }
+
+  tokyo_asg_name = try(data.terraform_remote_state.tokyo_app.outputs.healthcheck_asg_name, "healthcheck-api-tokyo-asg")
 
   # IDC 설정
   idc_host_cidr = data.terraform_remote_state.network.outputs.idc_host_cidr

@@ -1,5 +1,5 @@
 const { RDSClient, DescribeDBClustersCommand } = require("@aws-sdk/client-rds");
-const { Route53Client, ListResourceRecordSetsCommand } = require("@aws-sdk/client-route-53");
+const { Route53Client, ListResourceRecordSetsCommand, ListHostedZonesByNameCommand } = require("@aws-sdk/client-route-53");
 const { CloudWatchClient, PutMetricDataCommand } = require("@aws-sdk/client-cloudwatch");
 
 const cloudwatch = new CloudWatchClient({});
@@ -56,11 +56,31 @@ const detectWriterRegion = async () => {
 };
 
 const detectRoute53ActiveRegion = async () => {
-  if (!env.route53ZoneId || !env.route53RecordName) return { region: "unknown", value: -1 };
+  if (!env.route53RecordName) return { region: "unknown", value: -1 };
   const client = new Route53Client({});
+
+  // If zone ID is empty, try to resolve it by listing hosted zones by name.
+  let hostedZoneId = env.route53ZoneId;
+  if (!hostedZoneId) {
+    const zones = await client.send(
+      new ListHostedZonesByNameCommand({ DNSName: env.route53RecordName })
+    );
+    const found = zones?.HostedZones?.find((z) => {
+      const zoneName = (z.Name || "").replace(/\.$/, "");
+      return env.route53RecordName.endsWith(zoneName);
+    });
+    if (found?.Id) {
+      hostedZoneId = found.Id.replace(/.*\//, "");
+    }
+  }
+
+  if (!hostedZoneId) {
+    return { region: "unknown", value: -1 };
+  }
+
   const res = await client.send(
     new ListResourceRecordSetsCommand({
-      HostedZoneId: env.route53ZoneId,
+      HostedZoneId: hostedZoneId,
       StartRecordName: env.route53RecordName,
     })
   );
@@ -94,6 +114,9 @@ const detectRoute53ActiveRegion = async () => {
 exports.handler = async () => {
   try {
     const [writer, route53] = await Promise.all([detectWriterRegion(), detectRoute53ActiveRegion()]);
+
+    console.log("writer detect", writer);
+    console.log("route53 detect", route53);
 
     await putMetrics([
       { name: "AuroraWriterRegion", value: writer.value },

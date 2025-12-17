@@ -97,7 +97,7 @@ variable "alb_suffix_tokyo" {
 variable "alb_5xx_rate_threshold" {
   description = "ALB 5xx rate threshold (5xx / RequestCount). Default 5%."
   type        = number
-  default     = 0.05
+  default     = 0.005
 }
 
 variable "alb_unhealthy_host_ratio_threshold" {
@@ -112,6 +112,17 @@ variable "alb_request_count_floor" {
   default     = 50
 }
 
+variable "alb_request_count_high_threshold" {
+  description = "RequestCount upper threshold (Sum per minute) for traffic spike alert."
+  type        = number
+  default     = 10000
+}
+
+variable "asg_scaleout_notify_threshold" {
+  description = "Notify when GroupInServiceInstances reaches this count (scale-out mail trigger)."
+  type        = number
+  default     = 3
+}
 variable "enable_synthetics_canary" {
   description = "Whether to deploy CloudWatch Synthetics canary for /health."
   type        = bool

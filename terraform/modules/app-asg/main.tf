@@ -156,7 +156,7 @@ resource "aws_autoscaling_group" "this" {
   desired_capacity          = var.desired_capacity
   vpc_zone_identifier       = var.app_subnet_ids
   health_check_type         = "ELB"
-  health_check_grace_period = 60
+  health_check_grace_period = 300
 
   # ASG 메트릭 수집 활성화 (CloudWatch 대시보드용)
   enabled_metrics = [

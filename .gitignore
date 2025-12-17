@@ -1,3 +1,18 @@
 # IDE
 .idea
 .claude
+
+# Infra Test
+applications/infra-test/node_modules/
+applications/infra-test/dist/
+applications/test-dashboard/
+
+# Terraform generated artifacts
+**/.terraform/*
+**/.terraform.lock.hcl
+**/terraform.tfstate
+**/terraform.tfstate.backup
+**/.terragrunt-cache
+
+# Lambda build artifacts
+terraform/global/monitoring/lambda/*.zip
