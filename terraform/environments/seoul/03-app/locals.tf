@@ -15,6 +15,8 @@ locals {
     tokyo = local.alb_suffix_tokyo
   }
 
+  alarm_topic_arn = var.alarm_topic_arn != null ? var.alarm_topic_arn : try(data.terraform_remote_state.global_monitoring.outputs.dr_alerts_topic_arn, null)
+
   tokyo_asg_name = try(data.terraform_remote_state.tokyo_app.outputs.healthcheck_asg_name, "healthcheck-api-tokyo-asg")
 
   # IDC 설정

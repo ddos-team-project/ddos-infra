@@ -15,9 +15,10 @@ const getMetricLine = (payload) => {
   if (!metric) return "";
   const cmp = payload.Trigger?.ComparisonOperator || ">";
   const threshold =
-    payload.Trigger?.Threshold ?? payload.Trigger?.Metrics?.[0]?.ReturnData
+    payload.Trigger?.Threshold ??
+    (payload.Trigger?.Metrics?.[0]?.ReturnData
       ? payload.Trigger?.Metrics?.[0]?.Threshold
-      : "";
+      : "");
   if (threshold === "" || threshold === undefined) return metric;
   return `${metric} ${cmp} ${threshold}`;
 };
