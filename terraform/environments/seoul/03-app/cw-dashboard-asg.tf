@@ -108,13 +108,16 @@ resource "aws_cloudwatch_dashboard" "asg_load_test" {
         type = "metric",
         x    = 12, y = 12, width = 12, height = 6,
         properties = {
-          title  = "ALB Response Time P50/P95/P99 (Seoul)"
+          title  = "ALB Response Time P50/P95/P99 (Seoul/Tokyo)"
           view   = "timeSeries"
           region = "ap-northeast-2"
           metrics = [
-            ["AWS/ApplicationELB", "TargetResponseTime", "LoadBalancer", local.alb_suffixes.seoul, { "stat" : "p50", "label" : "P50" }],
-            ["...", { "stat" : "p95", "label" : "P95", "color" : "#ff7f0e" }],
-            ["...", { "stat" : "p99", "label" : "P99", "color" : "#d62728" }]
+            ["AWS/ApplicationELB", "TargetResponseTime", "LoadBalancer", local.alb_suffixes.seoul, { "stat" : "p50", "label" : "Seoul P50" }],
+            ["...", { "stat" : "p95", "label" : "Seoul P95", "color" : "#ff7f0e" }],
+            ["...", { "stat" : "p99", "label" : "Seoul P99", "color" : "#d62728" }],
+            ["AWS/ApplicationELB", "TargetResponseTime", "LoadBalancer", local.alb_suffixes.tokyo, { "stat" : "p50", "label" : "Tokyo P50", "region" : "ap-northeast-1", "color" : "#17becf" }],
+            ["...", { "stat" : "p95", "label" : "Tokyo P95", "region" : "ap-northeast-1", "color" : "#bcbd22" }],
+            ["...", { "stat" : "p99", "label" : "Tokyo P99", "region" : "ap-northeast-1", "color" : "#e377c2" }]
           ]
           period = 60
         }
@@ -128,7 +131,7 @@ resource "aws_cloudwatch_dashboard" "asg_load_test" {
           view   = "timeSeries"
           region = "ap-northeast-2"
           metrics = [
-            ["AWS/ApplicationELB", "HealthyHostCount", "LoadBalancer", local.alb_suffixes.seoul, "TargetGroup", local.tg_suffix, { "color" : "#2ca02c", "label" : "Healthy" }],
+            ["AWS/ApplicationELB", "HealthyHostCount", "LoadBalancer", local.alb_suffixes.seoul, "TargetGroup", local.tg_suffixes.seoul, { "color" : "#2ca02c", "label" : "Healthy" }],
             [".", "UnHealthyHostCount", ".", ".", ".", ".", { "color" : "#d62728", "label" : "Unhealthy" }]
           ]
           period = 60
@@ -142,6 +145,25 @@ resource "aws_cloudwatch_dashboard" "asg_load_test" {
         type = "metric",
         x    = 12, y = 18, width = 12, height = 6,
         properties = {
+          title  = "Target Group Health (Tokyo)"
+          view   = "timeSeries"
+          region = "ap-northeast-1"
+          metrics = [
+            ["AWS/ApplicationELB", "HealthyHostCount", "LoadBalancer", local.alb_suffixes.tokyo, "TargetGroup", local.tg_suffixes.tokyo, { "color" : "#2ca02c", "label" : "Healthy", "region" : "ap-northeast-1" }],
+            [".", "UnHealthyHostCount", ".", ".", ".", ".", { "color" : "#d62728", "label" : "Unhealthy", "region" : "ap-northeast-1" }]
+          ]
+          period = 60
+          stat   = "Average"
+          yAxis = {
+            left = { min = 0 }
+          }
+        }
+      },
+      # Row 5: ALB Connections
+      {
+        type = "metric",
+        x    = 0, y = 24, width = 12, height = 6,
+        properties = {
           title  = "ALB Connections (Seoul)"
           view   = "timeSeries"
           region = "ap-northeast-2"
@@ -153,10 +175,25 @@ resource "aws_cloudwatch_dashboard" "asg_load_test" {
           stat   = "Sum"
         }
       },
-      # Row 5: HTTP Status Codes
       {
         type = "metric",
-        x    = 0, y = 24, width = 12, height = 6,
+        x    = 12, y = 24, width = 12, height = 6,
+        properties = {
+          title  = "ALB Connections (Tokyo)"
+          view   = "timeSeries"
+          region = "ap-northeast-1"
+          metrics = [
+            ["AWS/ApplicationELB", "ActiveConnectionCount", "LoadBalancer", local.alb_suffixes.tokyo, { "label" : "Active", "region" : "ap-northeast-1" }],
+            [".", "NewConnectionCount", ".", ".", { "label" : "New", "color" : "#ff7f0e", "region" : "ap-northeast-1" }]
+          ]
+          period = 60
+          stat   = "Sum"
+        }
+      },
+      # Row 6: HTTP Status Codes
+      {
+        type = "metric",
+        x    = 0, y = 30, width = 12, height = 6,
         properties = {
           title  = "HTTP Status Codes (Seoul)"
           view   = "timeSeries"
@@ -172,7 +209,7 @@ resource "aws_cloudwatch_dashboard" "asg_load_test" {
       },
       {
         type = "metric",
-        x    = 12, y = 24, width = 12, height = 6,
+        x    = 12, y = 30, width = 12, height = 6,
         properties = {
           title  = "HTTP Status Codes (Tokyo)"
           view   = "timeSeries"
@@ -186,10 +223,10 @@ resource "aws_cloudwatch_dashboard" "asg_load_test" {
           stat   = "Sum"
         }
       },
-      # Row 6: Network Traffic
+      # Row 7: Network Traffic
       {
         type = "metric",
-        x    = 0, y = 30, width = 12, height = 6,
+        x    = 0, y = 36, width = 12, height = 6,
         properties = {
           title  = "Network Traffic (Seoul ASG)"
           view   = "timeSeries"
@@ -204,7 +241,7 @@ resource "aws_cloudwatch_dashboard" "asg_load_test" {
       },
       {
         type = "metric",
-        x    = 12, y = 30, width = 12, height = 6,
+        x    = 12, y = 36, width = 12, height = 6,
         properties = {
           title  = "Network Traffic (Tokyo ASG)"
           view   = "timeSeries"
