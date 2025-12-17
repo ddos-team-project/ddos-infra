@@ -175,6 +175,7 @@ resource "aws_lambda_function" "email_notifier" {
       SES_RECIPIENTS  = var.ses_recipients_ssm_path != "" ? data.aws_ssm_parameter.ses_recipients[0].value : join(",", var.ses_recipients)
       WRITER_HINT     = "Seoul"
       ACTION_HINT     = "Failover 검토 필요"
+      DR_FAILOVER_URL_BASE = "https://ap-northeast-1.console.aws.amazon.com/systems-manager/automation/execute/Aurora-Disaster-Failover-Runbook-Tokyo?region=ap-northeast-1#GlobalClusterIdentifier=dh-prod-global-rds-v2&LocalClusterRegion=ap-northeast-1&LocalClusterIdentifier=dh-prod-db-tokyo-aurora-secondary-v2&FailedRegion=ap-northeast-2&FailedRegionName=Seoul&SkipSnapshot=true"
     }
   }
 }
