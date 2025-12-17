@@ -85,6 +85,6 @@ resource "aws_cloudwatch_metric_alarm" "synthetics_health" {
   }
   treat_missing_data = "breaching"
   alarm_description  = "Synthetics /health canary failed"
-  alarm_actions      = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
-  ok_actions         = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
+  alarm_actions      = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
+  ok_actions         = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
 }

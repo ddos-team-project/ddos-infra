@@ -12,8 +12,8 @@ resource "aws_cloudwatch_metric_alarm" "alb_healthy_low" {
     LoadBalancer = local.alb_suffix
     TargetGroup  = local.tg_suffix
   }
-  alarm_actions = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
-  ok_actions    = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
+  alarm_actions = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
+  ok_actions    = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "alb_5xx" {
@@ -29,8 +29,8 @@ resource "aws_cloudwatch_metric_alarm" "alb_5xx" {
     LoadBalancer = local.alb_suffix
     TargetGroup  = local.tg_suffix
   }
-  alarm_actions = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
-  ok_actions    = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
+  alarm_actions = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
+  ok_actions    = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "alb_5xx_rate" {
@@ -77,15 +77,15 @@ resource "aws_cloudwatch_metric_alarm" "alb_5xx_rate" {
     label       = "5xx rate"
     return_data = true
   }
-  alarm_actions = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
-  ok_actions    = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
+  alarm_actions = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
+  ok_actions    = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "alb_latency_p95" {
   alarm_name          = "${local.name_prefix}-alb-latency-p95"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 3
-  threshold           = 1.0 # 초, 필요 시 조정
+  threshold           = 1.0 # �? ?�요 ??조정
   period              = 60
   extended_statistic  = "p95.0"
   namespace           = "AWS/ApplicationELB"
@@ -94,8 +94,8 @@ resource "aws_cloudwatch_metric_alarm" "alb_latency_p95" {
     LoadBalancer = local.alb_suffix
     TargetGroup  = local.tg_suffix
   }
-  alarm_actions = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
-  ok_actions    = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
+  alarm_actions = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
+  ok_actions    = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "alb_unhealthy_ratio" {
@@ -142,8 +142,8 @@ resource "aws_cloudwatch_metric_alarm" "alb_unhealthy_ratio" {
     label       = "Unhealthy ratio"
     return_data = true
   }
-  alarm_actions = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
-  ok_actions    = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
+  alarm_actions = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
+  ok_actions    = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "alb_request_drop" {
@@ -162,8 +162,8 @@ resource "aws_cloudwatch_metric_alarm" "alb_request_drop" {
   }
   treat_missing_data = "breaching"
   alarm_description  = "ALB RequestCount fell below floor (possible traffic drop). Tune alb_request_count_floor as needed."
-  alarm_actions      = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
-  ok_actions         = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
+  alarm_actions      = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
+  ok_actions         = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "alb_request_spike" {
@@ -181,8 +181,8 @@ resource "aws_cloudwatch_metric_alarm" "alb_request_spike" {
   }
   treat_missing_data = "notBreaching"
   alarm_description  = "ALB RequestCount exceeded ${var.alb_request_count_high_threshold} per minute (traffic spike)"
-  alarm_actions      = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
-  ok_actions         = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
+  alarm_actions      = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
+  ok_actions         = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "ec2_status_check" {
@@ -197,8 +197,8 @@ resource "aws_cloudwatch_metric_alarm" "ec2_status_check" {
   dimensions = {
     AutoScalingGroupName = module.healthcheck_api_asg.autoscaling_group_name
   }
-  alarm_actions = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
-  ok_actions    = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
+  alarm_actions = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
+  ok_actions    = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "ec2_cpu_high" {
@@ -213,8 +213,8 @@ resource "aws_cloudwatch_metric_alarm" "ec2_cpu_high" {
   dimensions = {
     AutoScalingGroupName = module.healthcheck_api_asg.autoscaling_group_name
   }
-  alarm_actions = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
-  ok_actions    = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
+  alarm_actions = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
+  ok_actions    = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
 }
 
 # Aurora replication lag (Seoul/Tokyo)
@@ -230,8 +230,8 @@ resource "aws_cloudwatch_metric_alarm" "aurora_lag_seoul" {
   dimensions = {
     DBClusterIdentifier = local.db_cluster_ids.seoul
   }
-  alarm_actions = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
-  ok_actions    = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
+  alarm_actions = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
+  ok_actions    = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "aurora_lag_tokyo" {
@@ -246,8 +246,8 @@ resource "aws_cloudwatch_metric_alarm" "aurora_lag_tokyo" {
   dimensions = {
     DBClusterIdentifier = local.db_cluster_ids.tokyo
   }
-  alarm_actions = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
-  ok_actions    = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
+  alarm_actions = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
+  ok_actions    = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
 }
 
 # Route53 health check alarms (Seoul/Tokyo)
@@ -263,8 +263,8 @@ resource "aws_cloudwatch_metric_alarm" "route53_hc_seoul" {
   dimensions = {
     HealthCheckId = var.route53_healthcheck_ids.seoul
   }
-  alarm_actions = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
-  ok_actions    = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
+  alarm_actions = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
+  ok_actions    = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "route53_hc_tokyo" {
@@ -279,19 +279,19 @@ resource "aws_cloudwatch_metric_alarm" "route53_hc_tokyo" {
   dimensions = {
     HealthCheckId = var.route53_healthcheck_ids.tokyo
   }
-  alarm_actions = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
-  ok_actions    = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
+  alarm_actions = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
+  ok_actions    = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
 }
 
-# ASG InService < Desired 감지
+# ASG InService < Desired 감�?
 resource "aws_cloudwatch_metric_alarm" "asg_inservice_gap" {
   alarm_name                = "${local.name_prefix}-asg-inservice-gap"
   comparison_operator       = "GreaterThanThreshold"
   evaluation_periods        = 1
-  threshold                 = 0 # gap > 0이면 경보
+  threshold                 = 0 # gap > 0?�면 경보
   treat_missing_data        = "breaching"
   insufficient_data_actions = []
-  alarm_description         = "ASG InService < Desired (강제 종료/비정상)"
+  alarm_description         = "ASG InService < Desired (강제 종료/비정??"
 
   metric_query {
     id = "des"
@@ -328,8 +328,8 @@ resource "aws_cloudwatch_metric_alarm" "asg_inservice_gap" {
     return_data = true
   }
 
-  alarm_actions = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
-  ok_actions    = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
+  alarm_actions = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
+  ok_actions    = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "asg_scaleout_notify" {
@@ -346,6 +346,43 @@ resource "aws_cloudwatch_metric_alarm" "asg_scaleout_notify" {
   }
   treat_missing_data = "notBreaching"
   alarm_description  = "ASG InService count reached ${var.asg_scaleout_notify_threshold} (scale-out)"
-  alarm_actions      = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
-  ok_actions         = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
+  alarm_actions      = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
+  ok_actions         = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
+}
+
+# ASG Desired/InService가 0?�로 ?�려�????�림
+resource "aws_cloudwatch_metric_alarm" "asg_desired_zero" {
+  alarm_name          = "${local.name_prefix}-asg-desired-zero"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = 1
+  threshold           = 1
+  period              = 60
+  statistic           = "Maximum"
+  namespace           = "AWS/AutoScaling"
+  metric_name         = "GroupDesiredCapacity"
+  dimensions = {
+    AutoScalingGroupName = module.healthcheck_api_asg.autoscaling_group_name
+  }
+  treat_missing_data = "breaching"
+  alarm_description  = "ASG desired capacity dropped below 1 (scaled to zero)"
+  alarm_actions      = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
+  ok_actions         = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
+}
+
+resource "aws_cloudwatch_metric_alarm" "asg_inservice_zero" {
+  alarm_name          = "${local.name_prefix}-asg-inservice-zero"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = 1
+  threshold           = 1
+  period              = 60
+  statistic           = "Maximum"
+  namespace           = "AWS/AutoScaling"
+  metric_name         = "GroupInServiceInstances"
+  dimensions = {
+    AutoScalingGroupName = module.healthcheck_api_asg.autoscaling_group_name
+  }
+  treat_missing_data = "breaching"
+  alarm_description  = "ASG in-service instances dropped below 1 (scaled to zero or unhealthy)"
+  alarm_actions      = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
+  ok_actions         = local.alarm_topic_arn == null ? [] : [local.alarm_topic_arn]
 }

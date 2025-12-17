@@ -36,4 +36,13 @@ data "terraform_remote_state" "tokyo_app" {
   }
 }
 
+data "terraform_remote_state" "global_monitoring" {
+  backend = "s3"
+  config = {
+    bucket = "diehard-ddos-tf-state-lock"
+    key    = "global/monitoring/terraform.tfstate"
+    region = "ap-northeast-2"
+  }
+}
+
 data "aws_caller_identity" "current" {}
