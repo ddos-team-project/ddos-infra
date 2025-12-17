@@ -86,7 +86,7 @@ variable "app_port" {
 variable "enable_target_tracking" {
   description = "ASG 타깃 추적 기반 오토스케일 활성화 여부"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "target_cpu_utilization" {
@@ -227,4 +227,40 @@ variable "target_requests_per_target" {
   description = "타깃당 요청 수 목표값 - 부하테스트 결과의 70~80% 권장"
   type        = number
   default     = 1000
+}
+
+variable "enable_rps_scaling" {
+  description = "RequestCountPerTarget 기반 스텝 스케일링 활성화 여부"
+  type        = bool
+  default     = true
+}
+
+variable "scale_out_rps_threshold" {
+  description = "Scale-Out 기준 RequestCountPerTarget 임계치 (req/min)"
+  type        = number
+  default     = 300
+}
+
+variable "scale_out_evaluation_periods" {
+  description = "Scale-Out 연속 평가 기간(분 단위, CloudWatch period 수)"
+  type        = number
+  default     = 3
+}
+
+variable "scale_in_rps_threshold" {
+  description = "Scale-In 기준 RequestCountPerTarget 임계치 (req/min)"
+  type        = number
+  default     = 150
+}
+
+variable "scale_in_evaluation_periods" {
+  description = "Scale-In 연속 평가 기간(분 단위, CloudWatch period 수)"
+  type        = number
+  default     = 10
+}
+
+variable "rps_metric_period" {
+  description = "CloudWatch RequestCountPerTarget 메트릭 수집 주기(초)"
+  type        = number
+  default     = 60
 }
