@@ -27,4 +27,13 @@ data "terraform_remote_state" "db_tokyo" {
   }
 }
 
+data "terraform_remote_state" "tokyo_app" {
+  backend = "s3"
+  config = {
+    bucket = "diehard-ddos-tf-state-lock"
+    key    = "tokyo/03-app/healthcheck-api.tfstate"
+    region = "ap-northeast-2"
+  }
+}
+
 data "aws_caller_identity" "current" {}

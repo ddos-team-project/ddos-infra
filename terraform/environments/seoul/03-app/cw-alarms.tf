@@ -166,6 +166,25 @@ resource "aws_cloudwatch_metric_alarm" "alb_request_drop" {
   ok_actions         = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
 }
 
+resource "aws_cloudwatch_metric_alarm" "alb_request_spike" {
+  alarm_name          = "${local.name_prefix}-alb-request-spike"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 1
+  threshold           = var.alb_request_count_high_threshold
+  period              = 60
+  statistic           = "Sum"
+  namespace           = "AWS/ApplicationELB"
+  metric_name         = "RequestCount"
+  dimensions = {
+    LoadBalancer = local.alb_suffix
+    TargetGroup  = local.tg_suffix
+  }
+  treat_missing_data = "notBreaching"
+  alarm_description  = "ALB RequestCount exceeded ${var.alb_request_count_high_threshold} per minute (traffic spike)"
+  alarm_actions      = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
+  ok_actions         = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
+}
+
 resource "aws_cloudwatch_metric_alarm" "ec2_status_check" {
   alarm_name          = "${local.name_prefix}-ec2-statuscheck"
   comparison_operator = "GreaterThanThreshold"
@@ -262,4 +281,71 @@ resource "aws_cloudwatch_metric_alarm" "route53_hc_tokyo" {
   }
   alarm_actions = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
   ok_actions    = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
+}
+
+# ASG InService < Desired 감지
+resource "aws_cloudwatch_metric_alarm" "asg_inservice_gap" {
+  alarm_name                = "${local.name_prefix}-asg-inservice-gap"
+  comparison_operator       = "GreaterThanThreshold"
+  evaluation_periods        = 1
+  threshold                 = 0 # gap > 0이면 경보
+  treat_missing_data        = "breaching"
+  insufficient_data_actions = []
+  alarm_description         = "ASG InService < Desired (강제 종료/비정상)"
+
+  metric_query {
+    id = "des"
+    metric {
+      namespace   = "AWS/AutoScaling"
+      metric_name = "GroupDesiredCapacity"
+      dimensions = {
+        AutoScalingGroupName = module.healthcheck_api_asg.autoscaling_group_name
+      }
+      period = 60
+      stat   = "Average"
+    }
+    return_data = false
+  }
+
+  metric_query {
+    id = "insvc"
+    metric {
+      namespace   = "AWS/AutoScaling"
+      metric_name = "GroupInServiceInstances"
+      dimensions = {
+        AutoScalingGroupName = module.healthcheck_api_asg.autoscaling_group_name
+      }
+      period = 60
+      stat   = "Average"
+    }
+    return_data = false
+  }
+
+  metric_query {
+    id          = "gap"
+    expression  = "des - insvc"
+    label       = "InService gap"
+    return_data = true
+  }
+
+  alarm_actions = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
+  ok_actions    = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
+}
+
+resource "aws_cloudwatch_metric_alarm" "asg_scaleout_notify" {
+  alarm_name          = "${local.name_prefix}-asg-scaleout"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 1
+  threshold           = var.asg_scaleout_notify_threshold
+  period              = 60
+  statistic           = "Maximum"
+  namespace           = "AWS/AutoScaling"
+  metric_name         = "GroupInServiceInstances"
+  dimensions = {
+    AutoScalingGroupName = module.healthcheck_api_asg.autoscaling_group_name
+  }
+  treat_missing_data = "notBreaching"
+  alarm_description  = "ASG InService count reached ${var.asg_scaleout_notify_threshold} (scale-out)"
+  alarm_actions      = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
+  ok_actions         = var.alarm_topic_arn == null ? [] : [var.alarm_topic_arn]
 }

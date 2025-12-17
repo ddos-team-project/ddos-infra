@@ -1,3 +1,17 @@
+locals {
+  record_zone_name = (
+    length(trimspace(var.route53_record_name)) > 0
+    ? join(".", slice(split(var.route53_record_name, "."), 1, length(split(var.route53_record_name, "."))))
+    : ""
+  )
+}
+
+data "aws_route53_zone" "record" {
+  count        = var.route53_zone_id == "" && local.record_zone_name != "" ? 1 : 0
+  name         = local.record_zone_name
+  private_zone = false
+}
+
 data "archive_file" "dr_metrics_lambda" {
   type        = "zip"
   source_file = "${path.module}/lambda/dr-metrics.js"
@@ -52,19 +66,21 @@ resource "aws_iam_role_policy" "dr_metrics" {
         Action : [
           "rds:DescribeDBClusters"
         ],
-        Resource : [
-          data.terraform_remote_state.seoul_data.outputs.cluster_arn,
-          data.terraform_remote_state.tokyo_data.outputs.cluster_arn
-        ]
+        Resource : "*"
       },
       {
         Effect : "Allow",
         Action : [
           "route53:ListResourceRecordSets"
         ],
-        Resource : [
-          var.route53_zone_id != "" ? "arn:aws:route53:::hostedzone/${var.route53_zone_id}" : "*"
-        ]
+        Resource : "*"
+      },
+      {
+        Effect : "Allow",
+        Action : [
+          "route53:ListHostedZonesByName"
+        ],
+        Resource : "*"
       }
     ]
   })
@@ -90,7 +106,7 @@ resource "aws_lambda_function" "dr_metrics" {
       SECONDARY_REGION     = local.writer_region_secondary
       PRIMARY_VALUE        = tostring(local.writer_region_value_map.primary)
       SECONDARY_VALUE      = tostring(local.writer_region_value_map.secondary)
-      ROUTE53_ZONE_ID      = var.route53_zone_id
+      ROUTE53_ZONE_ID      = var.route53_zone_id != "" ? var.route53_zone_id : (length(data.aws_route53_zone.record) > 0 ? data.aws_route53_zone.record[0].zone_id : "")
       ROUTE53_RECORD_NAME  = var.route53_record_name
     }
   }
