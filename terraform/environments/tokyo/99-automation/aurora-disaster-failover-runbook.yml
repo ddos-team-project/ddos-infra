@@ -241,25 +241,6 @@ mainSteps:
             - Name: "FailedRegion"
               Value: "{{ FailedRegionName }}"
 
-  - name: CreateAuditRecord
-    action: aws:executeAwsApi
-    description: "감사 기록 생성"
-    inputs:
-      Service: ssm
-      Api: PutParameter
-      Name: "/ddos/aurora/disaster-recovery/tokyo-{{ global:DATE }}"
-      Value: "Incident: {{ IncidentNumber }}, Failed Region: {{ FailedRegionName }}, Recovery Region: Tokyo, Recovery Time: {{ global:DATE_TIME }}"
-      Type: "String"
-      Overwrite: true
-      Description: "Disaster Recovery Audit Record - Seoul Failure"
-      Tags:
-        - Key: Type
-          Value: "AuditLog"
-        - Key: Incident
-          Value: "{{ IncidentNumber }}"
-        - Key: FailedRegion
-          Value: "{{ FailedRegionName }}"
-
 outputs:
   - VerifyLocalClusterHealth.LocalClusterStatus
   - VerifyLocalClusterHealth.LocalClusterEndpoint
