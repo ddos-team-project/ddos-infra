@@ -41,6 +41,7 @@ exports.handler = async (event) => {
   const writerHint = process.env.WRITER_HINT || "Unknown";
   const actionHint = process.env.ACTION_HINT || "Failover 검토 필요";
   const drFailoverUrlBase = process.env.DR_FAILOVER_URL_BASE || "";
+  const drDashboardUrl = process.env.DR_DASHBOARD_URL || "";
 
   if (!sender || recipients.length === 0) {
     console.error("Missing SES config (sender/recipients)");
@@ -75,9 +76,10 @@ exports.handler = async (event) => {
       `Action: ${actionHint}`,
       `Reason: ${reason}`,
       "",
-      drFailoverUrl ? "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" : null,
+      "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      drDashboardUrl ? `📊 DR Dashboard: ${drDashboardUrl}` : null,
       drFailoverUrl ? `Incident #: ${incidentNumber}` : null,
-      drFailoverUrl ? `DR Failover Runbook: ${drFailoverUrl}` : null,
+      drFailoverUrl ? `🔧 DR Failover Runbook: ${drFailoverUrl}` : null,
     ].filter(Boolean);
 
     const cmd = new SendEmailCommand({

@@ -156,5 +156,5 @@ variable "synthetics_schedule_expression" {
 variable "alarm_topic_arn" {
   description = "SNS topic ARN for CloudWatch alarms"
   type        = string
-  default     = "arn:aws:sns:ap-northeast-2:331221168354:CloudWatch-"
+  default     = null
 }

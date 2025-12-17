@@ -97,7 +97,7 @@ variable "ses_sender" {
 variable "ses_sender_ssm_path" {
   description = "SSM parameter name for SES sender email (overrides ses_sender if set)"
   type        = string
-  default     = ""
+  default     = "/dr/email/sender"
 }
 
 variable "ses_recipients" {
@@ -109,7 +109,7 @@ variable "ses_recipients" {
 variable "ses_recipients_ssm_path" {
   description = "SSM parameter name for SES recipients (comma-separated, overrides ses_recipients if set)"
   type        = string
-  default     = ""
+  default     = "/dr/email/recipients"
 }
 
 variable "ses_template_name" {
