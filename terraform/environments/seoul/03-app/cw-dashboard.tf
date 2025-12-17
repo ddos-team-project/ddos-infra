@@ -79,8 +79,8 @@ resource "aws_cloudwatch_dashboard" "dr_failover_summary" {
           view   = "timeSeries"
           region = "ap-northeast-1"
           metrics = [
-            ["AWS/ApplicationELB", "UnHealthyHostCount", "LoadBalancer", local.alb_suffixes.tokyo, "TargetGroup", local.tg_suffix, { "id" : "unh", "stat" : "Average", "region" : "ap-northeast-1", "visible" : false }],
-            ["AWS/ApplicationELB", "HealthyHostCount", "LoadBalancer", local.alb_suffixes.tokyo, "TargetGroup", local.tg_suffix, { "id" : "h", "stat" : "Average", "region" : "ap-northeast-1", "visible" : false }],
+            ["AWS/ApplicationELB", "UnHealthyHostCount", "LoadBalancer", local.alb_suffixes.tokyo, "TargetGroup", local.tg_suffixes.tokyo, { "id" : "unh", "stat" : "Average", "region" : "ap-northeast-1", "visible" : false }],
+            ["AWS/ApplicationELB", "HealthyHostCount", "LoadBalancer", local.alb_suffixes.tokyo, "TargetGroup", local.tg_suffixes.tokyo, { "id" : "h", "stat" : "Average", "region" : "ap-northeast-1", "visible" : false }],
             [{ "expression" : "IF((h+unh)>0,(h/(h+unh))*100,0)", "label" : "Health (%)", "id" : "ratio" }]
           ]
           period = 60
@@ -333,8 +333,8 @@ resource "aws_cloudwatch_dashboard" "dr_failover_detail" {
           view   = "timeSeries"
           region = "ap-northeast-1"
           metrics = [
-            ["AWS/ApplicationELB", "UnHealthyHostCount", "LoadBalancer", local.alb_suffixes.tokyo, "TargetGroup", local.tg_suffix, { "id" : "unh", "stat" : "Average", "region" : "ap-northeast-1", "visible" : false }],
-            ["AWS/ApplicationELB", "HealthyHostCount", "LoadBalancer", local.alb_suffixes.tokyo, "TargetGroup", local.tg_suffix, { "id" : "h", "stat" : "Average", "region" : "ap-northeast-1", "visible" : false }],
+            ["AWS/ApplicationELB", "UnHealthyHostCount", "LoadBalancer", local.alb_suffixes.tokyo, "TargetGroup", local.tg_suffixes.tokyo, { "id" : "unh", "stat" : "Average", "region" : "ap-northeast-1", "visible" : false }],
+            ["AWS/ApplicationELB", "HealthyHostCount", "LoadBalancer", local.alb_suffixes.tokyo, "TargetGroup", local.tg_suffixes.tokyo, { "id" : "h", "stat" : "Average", "region" : "ap-northeast-1", "visible" : false }],
             [{ "expression" : "IF((h+unh)>0,unh/(h+unh),0)", "label" : "Unhealthy ratio", "id" : "ratio" }]
           ]
           period = 60

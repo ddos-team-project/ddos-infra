@@ -22,3 +22,8 @@ output "healthcheck_asg_name" {
   description = "Healthcheck API ASG name"
   value       = module.healthcheck_api_asg.autoscaling_group_name
 }
+
+output "healthcheck_tg_suffix" {
+  description = "Healthcheck API Target Group suffix for CloudWatch metrics"
+  value       = local.tg_suffix
+}

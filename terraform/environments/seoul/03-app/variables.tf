@@ -1,4 +1,4 @@
-﻿variable "aws_region" {
+variable "aws_region" {
   description = "AWS 리전"
   type        = string
   default     = "ap-northeast-2"
@@ -92,6 +92,12 @@ variable "alb_suffix_tokyo" {
   description = "ALB suffix for Tokyo (LoadBalancer dimension value, e.g. app/xxx-alb/...)"
   type        = string
   default     = "app/healthcheck-api-tokyo-alb/e96ebc5e91cc7975"
+}
+
+variable "tg_suffix_tokyo" {
+  description = "Target Group suffix for Tokyo (TargetGroup dimension value, e.g. targetgroup/xxx-tg/...)"
+  type        = string
+  default     = "targetgroup/healthcheck-api-tokyo-tg/1234567890abcdef"
 }
 
 variable "alb_5xx_rate_threshold" {

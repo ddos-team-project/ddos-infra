@@ -9,10 +9,16 @@ locals {
   alb_subnet_ids = data.terraform_remote_state.network.outputs.public_subnets
 
   alb_suffix_tokyo = try(data.terraform_remote_state.tokyo_app.outputs.healthcheck_alb_suffix, var.alb_suffix_tokyo)
+  tg_suffix_tokyo  = try("targetgroup/${data.terraform_remote_state.tokyo_app.outputs.healthcheck_tg_suffix}", var.tg_suffix_tokyo)
 
   alb_suffixes = {
     seoul = local.alb_suffix
     tokyo = local.alb_suffix_tokyo
+  }
+
+  tg_suffixes = {
+    seoul = local.tg_suffix
+    tokyo = local.tg_suffix_tokyo
   }
 
   alarm_topic_arn = var.alarm_topic_arn != null ? var.alarm_topic_arn : try(data.terraform_remote_state.global_monitoring.outputs.dr_alerts_topic_arn, null)
