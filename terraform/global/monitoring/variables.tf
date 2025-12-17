@@ -10,6 +10,12 @@ variable "dr_metrics_schedule" {
   default     = "rate(5 minutes)"
 }
 
+variable "tokyo_traffic_ratio_schedule" {
+  description = "Schedule expression for Tokyo traffic ratio metric publisher"
+  type        = string
+  default     = "rate(5 minutes)"
+}
+
 variable "route53_zone_id" {
   description = "Hosted zone ID for active region detection"
   type        = string
