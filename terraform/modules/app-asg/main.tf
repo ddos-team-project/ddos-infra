@@ -69,6 +69,15 @@ resource "aws_iam_instance_profile" "ec2_profile" {
   role = aws_iam_role.ec2_role.name
 }
 
+data "aws_lb_target_group" "this" {
+  arn = var.target_group_arns[0]
+}
+
+locals {
+  target_group_arn_suffix  = data.aws_lb_target_group.this.arn_suffix
+  load_balancer_arn_suffix = element(split("loadbalancer/", data.aws_lb_target_group.this.load_balancer_arns[0]), 1)
+}
+
 # 앱 컨테이너 실행을 위한 user-data
 data "template_file" "user_data" {
   template = file("${path.module}/user-data.tpl")
@@ -199,7 +208,8 @@ resource "aws_autoscaling_group" "this" {
 
 # 타깃 추적 기반 오토스케일(평균 CPU %)
 resource "aws_autoscaling_policy" "cpu_target_tracking" {
-  count                     = var.enable_target_tracking ? 1 : 0
+  # CPU 타깃 트래킹은 RPS 기반 스케일링과 동시 동작을 막기 위해 상호 배타적으로 활성화
+  count                     = var.enable_target_tracking && !var.enable_rps_scaling ? 1 : 0
   name                      = "${var.name}-cpu-target-tracking"
   autoscaling_group_name    = aws_autoscaling_group.this.name
   estimated_instance_warmup = var.estimated_instance_warmup
@@ -215,23 +225,70 @@ resource "aws_autoscaling_policy" "cpu_target_tracking" {
   }
 }
 
-# ALB 요청 수 기반 타깃 추적 오토스케일링 (금융권 권장)
-resource "aws_autoscaling_policy" "alb_request_tracking" {
-  count                     = var.enable_alb_request_scaling ? 1 : 0
-  name                      = "${var.name}-alb-request-tracking"
+resource "aws_autoscaling_policy" "request_count_scale_out" {
+  count                     = var.enable_rps_scaling ? 1 : 0
+  name                      = "${var.name}-rps-scale-out"
   autoscaling_group_name    = aws_autoscaling_group.this.name
+  policy_type               = "StepScaling"
+  adjustment_type           = "ChangeInCapacity"
   estimated_instance_warmup = var.estimated_instance_warmup
-  policy_type               = "TargetTrackingScaling"
 
-  target_tracking_configuration {
-    predefined_metric_specification {
-      predefined_metric_type = "ALBRequestCountPerTarget"
-      resource_label         = "${var.alb_arn_suffix}/${var.target_group_arn_suffix}"
-    }
-
-    target_value     = var.target_requests_per_target
-    disable_scale_in = var.disable_scale_in
+  step_adjustment {
+    metric_interval_lower_bound = 0
+    scaling_adjustment          = 1
   }
+}
+
+resource "aws_autoscaling_policy" "request_count_scale_in" {
+  count                     = var.enable_rps_scaling ? 1 : 0
+  name                      = "${var.name}-rps-scale-in"
+  autoscaling_group_name    = aws_autoscaling_group.this.name
+  policy_type               = "StepScaling"
+  adjustment_type           = "ChangeInCapacity"
+  estimated_instance_warmup = var.estimated_instance_warmup
+
+  step_adjustment {
+    metric_interval_upper_bound = 0
+    scaling_adjustment          = -1
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "request_count_high" {
+  count              = var.enable_rps_scaling ? 1 : 0
+  alarm_name          = "${var.name}-rps-high"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = var.scale_out_evaluation_periods
+  threshold           = var.scale_out_rps_threshold
+  metric_name         = "RequestCountPerTarget"
+  namespace           = "AWS/ApplicationELB"
+  statistic           = "Sum"
+  period              = var.rps_metric_period
+
+  dimensions = {
+    TargetGroup = local.target_group_arn_suffix
+    LoadBalancer = local.load_balancer_arn_suffix
+  }
+
+  alarm_actions = [aws_autoscaling_policy.request_count_scale_out.arn]
+}
+
+resource "aws_cloudwatch_metric_alarm" "request_count_low" {
+  count              = var.enable_rps_scaling ? 1 : 0
+  alarm_name          = "${var.name}-rps-low"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = var.scale_in_evaluation_periods
+  threshold           = var.scale_in_rps_threshold
+  metric_name         = "RequestCountPerTarget"
+  namespace           = "AWS/ApplicationELB"
+  statistic           = "Sum"
+  period              = var.rps_metric_period
+
+  dimensions = {
+    TargetGroup = local.target_group_arn_suffix
+    LoadBalancer = local.load_balancer_arn_suffix
+  }
+
+  alarm_actions = [aws_autoscaling_policy.request_count_scale_in.arn]
 }
 
 data "aws_ami" "amazon_linux_2023" {
