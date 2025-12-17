@@ -23,6 +23,13 @@ const getMetricLine = (payload) => {
   return `${metric} ${cmp} ${threshold}`;
 };
 
+const generateIncidentNumber = () => {
+  const now = new Date();
+  const timestamp = now.toISOString().replace(/[-:T.Z]/g, "").slice(0, 14);
+  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+  return `INC${timestamp}-${random}`;
+};
+
 exports.handler = async (event) => {
   console.log("SNS event:", JSON.stringify(event, null, 2));
 
@@ -33,6 +40,7 @@ exports.handler = async (event) => {
     .filter((s) => s);
   const writerHint = process.env.WRITER_HINT || "Unknown";
   const actionHint = process.env.ACTION_HINT || "Failover 검토 필요";
+  const drFailoverUrlBase = process.env.DR_FAILOVER_URL_BASE || "";
 
   if (!sender || recipients.length === 0) {
     console.error("Missing SES config (sender/recipients)");
@@ -54,6 +62,11 @@ exports.handler = async (event) => {
     const metricLine = getMetricLine(payload);
     const reason = payload.NewStateReason || payload.AlarmDescription || "N/A";
 
+    const incidentNumber = generateIncidentNumber();
+    const drFailoverUrl = drFailoverUrlBase
+      ? `${drFailoverUrlBase}&IncidentNumber=${incidentNumber}`
+      : "";
+
     const bodyLines = [
       "🚨 [CRITICAL] DR Alert",
       `Region: ${region}`,
@@ -61,6 +74,10 @@ exports.handler = async (event) => {
       `Writer: ${writerHint}`,
       `Action: ${actionHint}`,
       `Reason: ${reason}`,
+      "",
+      drFailoverUrl ? "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" : null,
+      drFailoverUrl ? `Incident #: ${incidentNumber}` : null,
+      drFailoverUrl ? `DR Failover Runbook: ${drFailoverUrl}` : null,
     ].filter(Boolean);
 
     const cmd = new SendEmailCommand({
