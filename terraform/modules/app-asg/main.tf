@@ -75,7 +75,7 @@ data "aws_lb_target_group" "this" {
 
 locals {
   target_group_arn_suffix  = data.aws_lb_target_group.this.arn_suffix
-  load_balancer_arn_suffix = element(split("loadbalancer/", data.aws_lb_target_group.this.load_balancer_arns[0]), 1)
+  load_balancer_arn_suffix = element(split("loadbalancer/", tolist(data.aws_lb_target_group.this.load_balancer_arns)[0]), 1)
 }
 
 # 앱 컨테이너 실행을 위한 user-data
@@ -254,7 +254,7 @@ resource "aws_autoscaling_policy" "request_count_scale_in" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "request_count_high" {
-  count              = var.enable_rps_scaling ? 1 : 0
+  count               = var.enable_rps_scaling ? 1 : 0
   alarm_name          = "${var.name}-rps-high"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = var.scale_out_evaluation_periods
@@ -265,15 +265,15 @@ resource "aws_cloudwatch_metric_alarm" "request_count_high" {
   period              = var.rps_metric_period
 
   dimensions = {
-    TargetGroup = local.target_group_arn_suffix
+    TargetGroup  = local.target_group_arn_suffix
     LoadBalancer = local.load_balancer_arn_suffix
   }
 
-  alarm_actions = [aws_autoscaling_policy.request_count_scale_out.arn]
+  alarm_actions = var.enable_rps_scaling ? [aws_autoscaling_policy.request_count_scale_out[0].arn] : []
 }
 
 resource "aws_cloudwatch_metric_alarm" "request_count_low" {
-  count              = var.enable_rps_scaling ? 1 : 0
+  count               = var.enable_rps_scaling ? 1 : 0
   alarm_name          = "${var.name}-rps-low"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = var.scale_in_evaluation_periods
@@ -284,11 +284,11 @@ resource "aws_cloudwatch_metric_alarm" "request_count_low" {
   period              = var.rps_metric_period
 
   dimensions = {
-    TargetGroup = local.target_group_arn_suffix
+    TargetGroup  = local.target_group_arn_suffix
     LoadBalancer = local.load_balancer_arn_suffix
   }
 
-  alarm_actions = [aws_autoscaling_policy.request_count_scale_in.arn]
+  alarm_actions = var.enable_rps_scaling ? [aws_autoscaling_policy.request_count_scale_in[0].arn] : []
 }
 
 data "aws_ami" "amazon_linux_2023" {
